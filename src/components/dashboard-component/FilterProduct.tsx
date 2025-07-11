@@ -1,295 +1,527 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { SlidersHorizontal, Search, X } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DataTable } from "./DataTable"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, Package, AlertTriangle, Leaf, Clock, TrendingDown, CheckCircle, XCircle } from "lucide-react"
 
-const FILTER_FIELDS = [
-  { id: "Historical_Sell_Through", label: "Historical Sell Through", min: 0, max: 100, unit: "%" },
-  { id: "Spoilage_Risk_Score", label: "Spoilage Risk Score", min: 0, max: 1, unit: "" },
-  { id: "Cold_Chain_Energy_Use", label: "Cold Chain Energy Use", min: 0, max: 1000, unit: "kWh" },
-  { id: "Sensor_Anomalies", label: "Sensor Anomalies", min: 0, max: 50, unit: "" },
-  { id: "Markdown_History", label: "Markdown History", min: 0, max: 100, unit: "%" },
-  { id: "Transport_Emissions", label: "Transport Emissions", min: 0, max: 500, unit: "kg CO2" },
-  { id: "Recyclability_Score", label: "Recyclability Score", min: 0, max: 1, unit: "" },
-  { id: "Overstock_Risk", label: "Overstock Risk", min: 0, max: 1, unit: "" },
-  { id: "Stockout_Risk", label: "Stockout Risk", min: 0, max: 1, unit: "" },
-  { id: "Embedded_Carbon_Footprint", label: "Embedded Carbon Footprint", min: 0, max: 100, unit: "kg CO2" },
-  { id: "Recycled_Content_Pct", label: "Recycled Content %", min: 0, max: 100, unit: "%" },
-  { id: "Compostability_Score", label: "Compostability Score", min: 0, max: 1, unit: "" },
-  { id: "Waste_Risk_Index", label: "Waste Risk Index", min: 0, max: 1, unit: "" },
-  { id: "Days_to_Expiry", label: "Days to Expiry", min: 0, max: 365, unit: "days" },
-  { id: "Forecasted_Demand", label: "Forecasted Demand", min: 0, max: 10000, unit: "units" },
-]
+type Filters = {
+  expireMinThan?: number
+  expireMaxThan?: number
+  forecastMinThan?: number
+  forecastMaxThan?: number
+  suggestedMarkdownPercentMinThan?: number
+  suggestedMarkdownPercentMaxThan?: number
+  deadStock?: boolean
+  triggerMarkdown?: boolean
+  spoilageRisk?: "green" | "yellow" | "red"
+  sustainabilityLabel?: "green" | "yellow" | "red"
+}
 
-const CATEGORIES = [
-  "Electronics",
-  "Food & Beverage",
-  "Clothing",
-  "Home & Garden",
-  "Health & Beauty",
-  "Sports & Outdoors",
-]
-
-const MOCK_PRODUCTS = [
-  {
-    id: "SKU001",
-    name: "Organic Apples",
-    category: "Food & Beverage",
-    spoilage_risk: 0.3,
-    waste_risk: 0.2,
-    days_to_expiry: 7,
-    forecasted_demand: 150,
-  },
-  {
-    id: "SKU002",
-    name: "Wireless Headphones",
-    category: "Electronics",
-    spoilage_risk: 0.1,
-    waste_risk: 0.4,
-    days_to_expiry: 365,
-    forecasted_demand: 75,
-  },
-  {
-    id: "SKU003",
-    name: "Cotton T-Shirt",
-    category: "Clothing",
-    spoilage_risk: 0.05,
-    waste_risk: 0.3,
-    days_to_expiry: 180,
-    forecasted_demand: 200,
-  },
-  {
-    id: "SKU004",
-    name: "Garden Fertilizer",
-    category: "Home & Garden",
-    spoilage_risk: 0.2,
-    waste_risk: 0.25,
-    days_to_expiry: 90,
-    forecasted_demand: 50,
-  },
-  {
-    id: "SKU005",
-    name: "Protein Powder",
-    category: "Health & Beauty",
-    spoilage_risk: 0.15,
-    waste_risk: 0.35,
-    days_to_expiry: 365,
-    forecasted_demand: 120,
-  },
-]
+type ProductResult = {
+  features: {
+    Average_Turnover_Time: number
+    Cold_Chain_Energy_Use: number
+    Compostability_Score: number
+    Days_Since_Last_Sale: number
+    Days_to_Expiry: number
+    Dead_Inventory_Flag: number
+    Embedded_Carbon_Footprint: number
+    Festival_Sales_Boost: number
+    Footprint_Factor: number
+    Forecasted_Demand: number
+    Historical_Sell_Through: number
+    Holiday_Demand_Amplifier: number
+    Markdown_History: number
+    Overstock_Risk: number
+    Promo_Effectiveness: number
+    Recyclability_Score: number
+    Recycled_Content_Pct: number
+    Redundancy_Index: number
+    Sensor_Anomalies: number
+    Shelf_Space_Efficiency: number
+    Spoilage_Risk_Score: number
+    Stockout_Risk: number
+    Take_Back_Eligible: number
+    Transport_Emissions: number
+    Upcoming_Local_Events: number
+    Waste_Risk_Index: number
+    category: string
+  }
+  prediction: {
+    days_to_expiry_pred: number
+    dead_stock: boolean
+    forecasted_demand_pred: number
+    spoilage_risk: "Red" | "Yellow" | "Green"
+    suggested_markdown_percent: number
+    sustainability_label: "Red" | "Yellow" | "Green"
+    trigger_markdown: boolean
+  }
+  sku: string
+}
 
 export function FilterProductsTab() {
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [filterValues, setFilterValues] = useState<Record<string, [number, number]>>({})
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const [filteredProducts, setFilteredProducts] = useState(MOCK_PRODUCTS)
+  const [filters, setFilters] = useState<Filters>({})
+  const [results, setResults] = useState<ProductResult[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
 
-  const handleFilterToggle = (filterId: string) => {
-    if (selectedFilters.includes(filterId)) {
-      setSelectedFilters(selectedFilters.filter((id) => id !== filterId))
-      const newValues = { ...filterValues }
-      delete newValues[filterId]
-      setFilterValues(newValues)
-    } else {
-      setSelectedFilters([...selectedFilters, filterId])
-      const field = FILTER_FIELDS.find((f) => f.id === filterId)
-      if (field) {
-        setFilterValues({
-          ...filterValues,
-          [filterId]: [field.min, field.max],
-        })
+  const handleNumberChange = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setFilters((prev) => ({
+      ...prev,
+      [key]: val ? Number.parseFloat(val) : undefined,
+    }))
+  }
+
+  const handleCheckedChange = (key: keyof Filters) => (checked: boolean) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: checked,
+    }))
+  }
+
+  const handleSelectChange = (key: keyof Filters) => (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value || undefined,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    const params = new URLSearchParams()
+
+    // Fix the parameter mapping
+    if (filters.expireMaxThan) params.append("days_to_expiry_pred_lt", filters.expireMaxThan.toString())
+    if (filters.expireMinThan) params.append("days_to_expiry_pred_gt", filters.expireMinThan.toString())
+    if (filters.forecastMaxThan) params.append("forecasted_demand_pred_lt", filters.forecastMaxThan.toString())
+    if (filters.forecastMinThan) params.append("forecasted_demand_pred_gt", filters.forecastMinThan.toString())
+    if (filters.suggestedMarkdownPercentMaxThan)
+      params.append("suggested_markdown_percent_lt", filters.suggestedMarkdownPercentMaxThan.toString())
+    if (filters.suggestedMarkdownPercentMinThan)
+      params.append("suggested_markdown_percent_gt", filters.suggestedMarkdownPercentMinThan.toString())
+    if (filters.deadStock) params.append("dead_stock", filters.deadStock.toString())
+    if (filters.triggerMarkdown) params.append("trigger_markdown", filters.triggerMarkdown.toString())
+    if (filters.spoilageRisk) params.append("spoilage_risk", filters.spoilageRisk)
+    if (filters.sustainabilityLabel) params.append("sustainability_label", filters.sustainabilityLabel)
+
+    const url = `https://shelfpulse.onrender.com/api/v1/products?${params.toString()}`
+
+    try {
+      console.log(url)
+      const res = await fetch(url)
+      if (!res.ok) {
+        console.log("Failed to fetch data")
+        setResults([])
+      } else {
+        const result = await res.json()
+        console.log(result)
+        setResults(result)
       }
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      setResults([])
+    } finally {
+      setIsLoading(false)
+      setHasSearched(true)
     }
   }
 
-  const handleSliderChange = (filterId: string, value: [number, number]) => {
-    setFilterValues({
-      ...filterValues,
-      [filterId]: value,
-    })
-  }
-
-  const handleSearch = () => {
-    // Mock filtering logic
-    let filtered = MOCK_PRODUCTS
-
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((product) => product.category === selectedCategory)
+  const getRiskColor = (risk: string) => {
+    switch (risk.toLowerCase()) {
+      case "green":
+        return "bg-green-500"
+      case "yellow":
+        return "bg-yellow-500"
+      case "red":
+        return "bg-red-500"
+      default:
+        return "bg-gray-500"
     }
-
-    setFilteredProducts(filtered)
   }
 
-  const columns = [
-    { accessorKey: "id", header: "SKU" },
-    { accessorKey: "name", header: "Product Name" },
-    { accessorKey: "category", header: "Category" },
-    {
-      accessorKey: "spoilage_risk",
-      header: "Spoilage Risk",
-      cell: ({ row }: any) => (
-        <Badge
-          variant={
-            row.original.spoilage_risk > 0.5
-              ? "destructive"
-              : row.original.spoilage_risk > 0.2
-                ? "secondary"
-                : "default"
-          }
-        >
-          {(row.original.spoilage_risk * 100).toFixed(1)}%
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: "days_to_expiry",
-      header: "Days to Expiry",
-      cell: ({ row }: any) => `${row.original.days_to_expiry} days`,
-    },
-    {
-      accessorKey: "forecasted_demand",
-      header: "Forecasted Demand",
-      cell: ({ row }: any) => `${row.original.forecasted_demand} units`,
-    },
-  ]
+  const getRiskIcon = (risk: string) => {
+    switch (risk.toLowerCase()) {
+      case "green":
+        return <CheckCircle className="w-4 h-4" />
+      case "yellow":
+        return <AlertTriangle className="w-4 h-4" />
+      case "red":
+        return <XCircle className="w-4 h-4" />
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <SlidersHorizontal className="h-5 w-5" />
-            Product Filters
-          </CardTitle>
-          <CardDescription>
-            Select filter criteria and adjust ranges to find products matching your requirements
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Filter Selection */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Select Filters</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {FILTER_FIELDS.map((field) => (
-                <div key={field.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={field.id}
-                    checked={selectedFilters.includes(field.id)}
-                    onCheckedChange={() => handleFilterToggle(field.id)}
-                  />
-                  <Label htmlFor={field.id} className="text-sm font-normal cursor-pointer">
-                    {field.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="max-w-6xl mx-auto p-8 bg-yellow-300 min-h-screen">
+      {/* Main Container */}
+      <div className="bg-white border-8 border-black shadow-[12px_12px_0px_0px_#000000] p-8 mb-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-black mb-2 tracking-tight">PRODUCT FILTERS</h1>
+          <div className="w-24 h-2 bg-black"></div>
+        </div>
 
-          {/* Selected Filters */}
-          {selectedFilters.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Selected Filters</Label>
-              <div className="flex flex-wrap gap-2">
-                {selectedFilters.map((filterId) => {
-                  const field = FILTER_FIELDS.find((f) => f.id === filterId)
-                  return (
-                    <Badge key={filterId} variant="secondary" className="flex items-center gap-1">
-                      {field?.label}
-                      <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterToggle(filterId)} />
-                    </Badge>
-                  )
-                })}
+        {/* Filter Selection */}
+        <div className="bg-gray-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000] mb-8">
+          <Label className="text-xl font-black text-black mb-4 block tracking-wide">SELECT FILTERS TO USE</Label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { key: "expire", label: "Days to Expire" },
+              { key: "forecast", label: "Forecasted Demand" },
+              { key: "markdown", label: "Markdown %" },
+              { key: "stock", label: "Stock Status" },
+              { key: "spoilage", label: "Spoilage Risk" },
+              { key: "sustainability", label: "Sustainability" },
+            ].map((filter) => (
+              <div key={filter.key} className="flex items-center space-x-3">
+                <Checkbox
+                  id={filter.key}
+                  checked={activeFilters.has(filter.key)}
+                  onCheckedChange={(checked) => {
+                    const newFilters = new Set(activeFilters)
+                    if (checked) {
+                      newFilters.add(filter.key)
+                    } else {
+                      newFilters.delete(filter.key)
+                    }
+                    setActiveFilters(newFilters)
+                  }}
+                  className="w-5 h-5 border-3 border-black data-[state=checked]:bg-black data-[state=checked]:text-white shadow-[2px_2px_0px_0px_#000000]"
+                />
+                <Label htmlFor={filter.key} className="text-sm font-bold text-black cursor-pointer">
+                  {filter.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <form className="space-y-8" onSubmit={handleSubmit}>
+          {/* Days to Expire Section */}
+          {activeFilters.has("expire") && (
+            <div className="bg-cyan-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000]">
+              <Label className="text-xl font-black text-black mb-4 block tracking-wide">DAYS TO EXPIRE</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MIN</Label>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    value={filters.expireMinThan ?? ""}
+                    onChange={handleNumberChange("expireMinThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MAX</Label>
+                  <Input
+                    type="number"
+                    placeholder="999"
+                    value={filters.expireMaxThan ?? ""}
+                    onChange={handleNumberChange("expireMaxThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Dynamic Sliders */}
-          {selectedFilters.length > 0 && (
-            <Card className="bg-slate-50/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Filter Ranges</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-96">
-                  <div className="space-y-6 pr-4">
-                    {selectedFilters.map((filterId) => {
-                      const field = FILTER_FIELDS.find((f) => f.id === filterId)
-                      if (!field) return null
-
-                      const currentValue = filterValues[filterId] || [field.min, field.max]
-
-                      return (
-                        <div key={filterId} className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <Label className="font-medium">{field.label}</Label>
-                            <span className="text-sm text-slate-600">
-                              {currentValue[0]} - {currentValue[1]} {field.unit}
-                            </span>
-                          </div>
-                          <Slider
-                            value={currentValue}
-                            onValueChange={(value) => handleSliderChange(filterId, value as [number, number])}
-                            min={field.min}
-                            max={field.max}
-                            step={(field.max - field.min) / 100}
-                            className="w-full"
-                          />
-                        </div>
-                      )
-                    })}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+          {/* Forecasted Demand Section */}
+          {activeFilters.has("forecast") && (
+            <div className="bg-pink-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000]">
+              <Label className="text-xl font-black text-black mb-4 block tracking-wide">FORECASTED DEMAND</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MIN</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={filters.forecastMinThan ?? ""}
+                    onChange={handleNumberChange("forecastMinThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MAX</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="999.99"
+                    value={filters.forecastMaxThan ?? ""}
+                    onChange={handleNumberChange("forecastMaxThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* Category Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category.toLowerCase()}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Suggested Markdown Percent Section */}
+          {activeFilters.has("markdown") && (
+            <div className="bg-green-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000]">
+              <Label className="text-xl font-black text-black mb-4 block tracking-wide">SUGGESTED MARKDOWN %</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MIN</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={filters.suggestedMarkdownPercentMinThan ?? ""}
+                    onChange={handleNumberChange("suggestedMarkdownPercentMinThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">MAX</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="100.00"
+                    value={filters.suggestedMarkdownPercentMaxThan ?? ""}
+                    onChange={handleNumberChange("suggestedMarkdownPercentMaxThan")}
+                    className="border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000] transition-all"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex items-end">
-              <Button onClick={handleSearch} className="w-full flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                Search Products
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
 
-      {/* Results Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtered Results</CardTitle>
-          <CardDescription>{filteredProducts.length} products found matching your criteria</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={columns} data={filteredProducts} />
-        </CardContent>
-      </Card>
+          {/* Checkboxes Section */}
+          {activeFilters.has("stock") && (
+            <div className="bg-orange-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000]">
+              <Label className="text-xl font-black text-black mb-4 block tracking-wide">STOCK STATUS</Label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <Checkbox
+                    id="deadStock"
+                    checked={filters.deadStock ?? false}
+                    onCheckedChange={handleCheckedChange("deadStock")}
+                    className="w-6 h-6 border-4 border-black data-[state=checked]:bg-black data-[state=checked]:text-white shadow-[3px_3px_0px_0px_#000000]"
+                  />
+                  <Label htmlFor="deadStock" className="text-lg font-bold text-black cursor-pointer">
+                    DEAD STOCK
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <Checkbox
+                    id="triggerMarkdown"
+                    checked={filters.triggerMarkdown ?? false}
+                    onCheckedChange={handleCheckedChange("triggerMarkdown")}
+                    className="w-6 h-6 border-4 border-black data-[state=checked]:bg-black data-[state=checked]:text-white shadow-[3px_3px_0px_0px_#000000]"
+                  />
+                  <Label htmlFor="triggerMarkdown" className="text-lg font-bold text-black cursor-pointer">
+                    TRIGGER MARKDOWN
+                  </Label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Dropdowns Section */}
+          {activeFilters.has("spoilage") || activeFilters.has("sustainability") ? (
+            <div className="bg-purple-200 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000]">
+              <Label className="text-xl font-black text-black mb-4 block tracking-wide">RISK ASSESSMENT</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">SPOILAGE RISK</Label>
+                  <Select value={filters.spoilageRisk ?? ""} onValueChange={handleSelectChange("spoilageRisk")}>
+                    <SelectTrigger className="w-full border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000]">
+                      <SelectValue placeholder="-- SELECT --" />
+                    </SelectTrigger>
+                    <SelectContent className="border-4 border-black bg-white">
+                      <SelectItem value="green" className="font-bold text-green-700">
+                        🟢 GREEN
+                      </SelectItem>
+                      <SelectItem value="yellow" className="font-bold text-yellow-700">
+                        🟡 YELLOW
+                      </SelectItem>
+                      <SelectItem value="red" className="font-bold text-red-700">
+                        🔴 RED
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-bold text-black mb-2 block">SUSTAINABILITY LABEL</Label>
+                  <Select
+                    value={filters.sustainabilityLabel ?? ""}
+                    onValueChange={handleSelectChange("sustainabilityLabel")}
+                  >
+                    <SelectTrigger className="w-full border-4 border-black bg-white text-black font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#000000] focus:shadow-[6px_6px_0px_0px_#000000]">
+                      <SelectValue placeholder="-- SELECT --" />
+                    </SelectTrigger>
+                    <SelectContent className="border-4 border-black bg-white">
+                      <SelectItem value="green" className="font-bold text-green-700">
+                        🟢 GREEN
+                      </SelectItem>
+                      <SelectItem value="yellow" className="font-bold text-yellow-700">
+                        🟡 YELLOW
+                      </SelectItem>
+                      <SelectItem value="red" className="font-bold text-red-700">
+                        🔴 RED
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Submit Button */}
+          <div className="pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-black text-2xl py-6 px-8 border-4 border-black shadow-[8px_8px_0px_0px_#000000] hover:shadow-[10px_10px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                  SEARCHING...
+                </>
+              ) : (
+                <>🔍 FILTER PRODUCTS</>
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      {/* Results Section */}
+      {hasSearched && (
+        <div className="bg-white border-8 border-black shadow-[12px_12px_0px_0px_#000000] p-8">
+          <div className="mb-6">
+            <h2 className="text-3xl font-black text-black mb-2 tracking-tight">SEARCH RESULTS ({results.length})</h2>
+            <div className="w-20 h-2 bg-black"></div>
+          </div>
+
+          {results.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <p className="text-xl font-bold text-gray-600">No products found matching your criteria</p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {results.map((product, index) => (
+                <Card
+                  key={product.sku}
+                  className="border-4 border-black shadow-[6px_6px_0px_0px_#000000] bg-gradient-to-r from-blue-100 to-purple-100"
+                >
+                  <CardHeader className="border-b-4 border-black bg-white">
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Package className="w-6 h-6" />
+                        <span className="text-2xl font-black">{product.sku}</span>
+                        <Badge className="bg-black text-white font-bold border-2 border-black">
+                          {product.features.category.toUpperCase()}
+                        </Badge>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {/* Predictions Row */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-white border-3 border-black p-4 shadow-[3px_3px_0px_0px_#000000]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-4 h-4" />
+                          <span className="font-bold text-sm">EXPIRES IN</span>
+                        </div>
+                        <div className="text-2xl font-black text-red-600">
+                          {product.prediction.days_to_expiry_pred} DAYS
+                        </div>
+                      </div>
+
+                      <div className="bg-white border-3 border-black p-4 shadow-[3px_3px_0px_0px_#000000]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingDown className="w-4 h-4" />
+                          <span className="font-bold text-sm">DEMAND</span>
+                        </div>
+                        <div className="text-2xl font-black text-blue-600">
+                          {product.prediction.forecasted_demand_pred.toFixed(2)}
+                        </div>
+                      </div>
+
+                      <div className="bg-white border-3 border-black p-4 shadow-[3px_3px_0px_0px_#000000]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span className="font-bold text-sm">SPOILAGE</span>
+                        </div>
+                        <div
+                          className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.spoilage_risk)}`}
+                        >
+                          {getRiskIcon(product.prediction.spoilage_risk)}
+                          {product.prediction.spoilage_risk.toUpperCase()}
+                        </div>
+                      </div>
+
+                      <div className="bg-white border-3 border-black p-4 shadow-[3px_3px_0px_0px_#000000]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Leaf className="w-4 h-4" />
+                          <span className="font-bold text-sm">SUSTAINABILITY</span>
+                        </div>
+                        <div
+                          className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.sustainability_label)}`}
+                        >
+                          {getRiskIcon(product.prediction.sustainability_label)}
+                          {product.prediction.sustainability_label.toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Badges */}
+                    <div className="flex gap-3 mb-4">
+                      {product.prediction.dead_stock && (
+                        <Badge className="bg-red-500 text-white font-bold border-2 border-black">💀 DEAD STOCK</Badge>
+                      )}
+                      {product.prediction.trigger_markdown && (
+                        <Badge className="bg-orange-500 text-white font-bold border-2 border-black">
+                          🏷️ MARKDOWN TRIGGER
+                        </Badge>
+                      )}
+                      {product.prediction.suggested_markdown_percent > 0 && (
+                        <Badge className="bg-yellow-500 text-black font-bold border-2 border-black">
+                          📉 {product.prediction.suggested_markdown_percent}% MARKDOWN
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Key Features */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                      <div className="bg-gray-100 border-2 border-black p-2">
+                        <span className="font-bold">Turnover:</span> {product.features.Average_Turnover_Time.toFixed(1)}{" "}
+                        days
+                      </div>
+                      <div className="bg-gray-100 border-2 border-black p-2">
+                        <span className="font-bold">Last Sale:</span> {product.features.Days_Since_Last_Sale} days ago
+                      </div>
+                      <div className="bg-gray-100 border-2 border-black p-2">
+                        <span className="font-bold">Overstock Risk:</span>{" "}
+                        {(product.features.Overstock_Risk * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

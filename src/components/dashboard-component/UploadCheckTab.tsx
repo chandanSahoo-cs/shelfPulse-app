@@ -1,48 +1,59 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, Download, CheckCircle } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, Download, FileText, Upload } from "lucide-react";
+import { useState } from "react";
 
 export function UploadCheckTab() {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [manualData, setManualData] = useState({
     sku: "",
-    name: "",
     category: "",
     days_to_expiry: "",
     forecasted_demand: "",
     historical_sell_through: "",
     spoilage_risk_score: "",
     waste_risk_index: "",
-  })
-  const [results, setResults] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+  });
+  const [results, setResults] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      setUploadedFile(file)
+      console.log(file);
+      setUploadedFile(file);
     }
-  }
+  };
 
   const handleManualSubmit = () => {
-    setLoading(true)
+    setLoading(true);
     // Simulate API call
     setTimeout(() => {
       setResults({
         type: "single",
         data: {
           sku: manualData.sku,
-          name: manualData.name,
           predictions: {
             spoilage_label: "Medium",
             sustainability_label: "Green",
@@ -51,32 +62,49 @@ export function UploadCheckTab() {
             predicted_waste_amount: 3.2,
           },
         },
-      })
-      setLoading(false)
-    }, 1000)
-  }
+      });
+      setLoading(false);
+    }, 1000);
+  };
 
-  const handleCSVProcess = () => {
-    setLoading(true)
+  const handleCSVProcess = async () => {
+    setLoading(true);
     // Simulate CSV processing
+    const res = await fetch(`https://shelfpulse.onrender.com/api/v1/predict_csv`, {
+      method: "POST",
+      body: uploadedFile,
+    });
+
     setTimeout(() => {
       setResults({
         type: "batch",
-        processed: 150,
-        successful: 147,
-        failed: 3,
-        downloadUrl: "#",
-      })
-      setLoading(false)
-    }, 2000)
+        file: res,
+      });
+      setLoading(false);
+    }, 2000);
+  };
+
+  const handleDownload = () =>{
+    console.log(results);
+    if(results?.file){
+      // const blob = new Blob(results,{type:'text/csv'})
+      const url = URL.createObjectURL(results.file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'result.csv'
+      document.body.appendChild(link)
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setManualData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -87,7 +115,8 @@ export function UploadCheckTab() {
             Upload & Check Products
           </CardTitle>
           <CardDescription>
-            Upload a CSV file for batch processing or manually enter product data for individual analysis
+            Upload a CSV file for batch processing or manually enter product
+            data for individual analysis
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -102,10 +131,20 @@ export function UploadCheckTab() {
                 <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                 <div className="space-y-2">
                   <Label htmlFor="csv-upload" className="cursor-pointer">
-                    <span className="text-lg font-medium">Drop your CSV file here or click to browse</span>
+                    <span className="text-lg font-medium">
+                      Drop your CSV file here or click to browse
+                    </span>
                   </Label>
-                  <Input id="csv-upload" type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-                  <p className="text-sm text-slate-500">Supported format: CSV with product data columns</p>
+                  <Input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <p className="text-sm text-slate-500">
+                    Supported format: CSV with product data columns
+                  </p>
                 </div>
               </div>
 
@@ -117,7 +156,9 @@ export function UploadCheckTab() {
                         <CheckCircle className="h-5 w-5 text-green-600" />
                         <div>
                           <p className="font-medium">{uploadedFile.name}</p>
-                          <p className="text-sm text-slate-600">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
+                          <p className="text-sm text-slate-600">
+                            {(uploadedFile.size / 1024).toFixed(1)} KB
+                          </p>
                         </div>
                       </div>
                       <Button onClick={handleCSVProcess} disabled={loading}>
@@ -141,17 +182,12 @@ export function UploadCheckTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Product Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter product name"
-                    value={manualData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={manualData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Select
+                    value={manualData.category}
+                    onValueChange={(value) =>
+                      handleInputChange("category", value)
+                    }>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -172,7 +208,9 @@ export function UploadCheckTab() {
                     type="number"
                     placeholder="Enter days to expiry"
                     value={manualData.days_to_expiry}
-                    onChange={(e) => handleInputChange("days_to_expiry", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("days_to_expiry", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -182,17 +220,26 @@ export function UploadCheckTab() {
                     type="number"
                     placeholder="Enter forecasted demand"
                     value={manualData.forecasted_demand}
-                    onChange={(e) => handleInputChange("forecasted_demand", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("forecasted_demand", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="historical_sell_through">Historical Sell Through (%)</Label>
+                  <Label htmlFor="historical_sell_through">
+                    Historical Sell Through (%)
+                  </Label>
                   <Input
                     id="historical_sell_through"
                     type="number"
                     placeholder="Enter sell through percentage"
                     value={manualData.historical_sell_through}
-                    onChange={(e) => handleInputChange("historical_sell_through", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "historical_sell_through",
+                        e.target.value
+                      )
+                    }
                   />
                 </div>
               </div>
@@ -200,9 +247,8 @@ export function UploadCheckTab() {
               <div className="flex justify-end">
                 <Button
                   onClick={handleManualSubmit}
-                  disabled={!manualData.sku || !manualData.name || loading}
-                  className="flex items-center gap-2"
-                >
+                  disabled={!manualData.sku || loading}
+                  className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
                   {loading ? "Analyzing..." : "Analyze Product"}
                 </Button>
@@ -223,7 +269,9 @@ export function UploadCheckTab() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">Product</Label>
+                    <Label className="text-sm font-medium text-slate-600">
+                      Product
+                    </Label>
                     <p className="font-medium">
                       {results.data.name} ({results.data.sku})
                     </p>
@@ -231,7 +279,9 @@ export function UploadCheckTab() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-600">Predictions</Label>
+                  <Label className="text-sm font-medium text-slate-600">
+                    Predictions
+                  </Label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-slate-50 p-4 rounded-lg">
                       <p className="text-sm text-slate-600">Spoilage Risk</p>
@@ -246,7 +296,9 @@ export function UploadCheckTab() {
                       </Badge>
                     </div>
                     <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-600">Suggested Markdown</p>
+                      <p className="text-sm text-slate-600">
+                        Suggested Markdown
+                      </p>
                       <p className="text-lg font-semibold mt-1">
                         {results.data.predictions.suggested_markdown_percent}%
                       </p>
@@ -255,33 +307,16 @@ export function UploadCheckTab() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm text-slate-600">Total Processed</p>
-                    <p className="text-2xl font-bold text-blue-700">{results.processed}</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-sm text-slate-600">Successful</p>
-                    <p className="text-2xl font-bold text-green-700">{results.successful}</p>
-                  </div>
-                  <div className="bg-red-50 p-4 rounded-lg">
-                    <p className="text-sm text-slate-600">Failed</p>
-                    <p className="text-2xl font-bold text-red-700">{results.failed}</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-center">
-                  <Button className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Download Results CSV
-                  </Button>
-                </div>
+              <div className="flex justify-center">
+                <Button className="flex items-center gap-2" onClick={()=>handleDownload()}>
+                  <Download className="h-4 w-4" />
+                  Download Results CSV
+                </Button>
               </div>
             )}
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }
