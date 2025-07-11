@@ -147,8 +147,8 @@ export function ProductDetailTab() {
             />
             <Button
               type="submit"
-              disabled={isLoading || !sku.trim()}
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-6 border-4 border-black shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50"
+              // disabled={isLoading || !sku.trim()}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-black text-xl py-4 px-6 border-4 border-black shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider"
             >
               {isLoading ? (
                 <>

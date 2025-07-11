@@ -1,322 +1,229 @@
-"use client";
+"use client"
 
-import type React from "react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Download, FileText, Upload } from "lucide-react";
-import { useState } from "react";
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { CheckCircle, FileText, Upload, Loader2, Download, AlertCircle } from "lucide-react"
+import { useState } from "react"
 
 export function UploadCheckTab() {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [manualData, setManualData] = useState({
-    sku: "",
-    category: "",
-    days_to_expiry: "",
-    forecasted_demand: "",
-    historical_sell_through: "",
-    spoilage_risk_score: "",
-    waste_risk_index: "",
-  });
-  const [results, setResults] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      console.log(file);
-      setUploadedFile(file);
-    }
-  };
-
-  const handleManualSubmit = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setResults({
-        type: "single",
-        data: {
-          sku: manualData.sku,
-          predictions: {
-            spoilage_label: "Medium",
-            sustainability_label: "Green",
-            suggested_markdown_percent: 15,
-            optimal_stock_level: 180,
-            predicted_waste_amount: 3.2,
-          },
-        },
-      });
-      setLoading(false);
-    }, 1000);
-  };
-
-  const handleCSVProcess = async () => {
-    setLoading(true);
-    // Simulate CSV processing
-    const res = await fetch(`https://shelfpulse.onrender.com/api/v1/predict_csv`, {
-      method: "POST",
-      body: uploadedFile,
-    });
-
-    setTimeout(() => {
-      setResults({
-        type: "batch",
-        file: res,
-      });
-      setLoading(false);
-    }, 2000);
-  };
-
-  const handleDownload = () =>{
-    console.log(results);
-    if(results?.file){
-      // const blob = new Blob(results,{type:'text/csv'})
-      const url = URL.createObjectURL(results.file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'result.csv'
-      document.body.appendChild(link)
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      console.log(file)
+      setUploadedFile(file)
+      setError(null)
+      setSuccess(false)
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setManualData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const handleCSVProcess = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      setSuccess(false)
+
+      if (!uploadedFile) {
+        setError("Please upload a file first")
+        return
+      }
+
+      const formData = new FormData()
+      formData.append("file", uploadedFile)
+
+      const res = await fetch(`https://shelfpulse.onrender.com/api/v1/predict_csv`, {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error(`Failed to process file: ${res.statusText}`)
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "result.csv"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+
+      setSuccess(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to process CSV file")
+      console.log(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload & Check Products
-          </CardTitle>
-          <CardDescription>
-            Upload a CSV file for batch processing or manually enter product
-            data for individual analysis
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="csv" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="csv">CSV Upload</TabsTrigger>
-              <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            </TabsList>
+    <div className="max-w-4xl mx-auto p-8 bg-yellow-300 min-h-screen">
+      {/* Main Container */}
+      <div className="bg-white border-8 border-black shadow-[12px_12px_0px_0px_#000000] p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-black text-black mb-2 tracking-tight">CSV UPLOAD & PROCESS</h1>
+          <div className="w-24 h-2 bg-black"></div>
+        </div>
 
-            <TabsContent value="csv" className="space-y-4">
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
-                <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <div className="space-y-2">
-                  <Label htmlFor="csv-upload" className="cursor-pointer">
-                    <span className="text-lg font-medium">
-                      Drop your CSV file here or click to browse
-                    </span>
-                  </Label>
-                  <Input
-                    id="csv-upload"
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <p className="text-sm text-slate-500">
-                    Supported format: CSV with product data columns
-                  </p>
-                </div>
+        {/* Upload Section */}
+        <div className="bg-cyan-200 border-4 border-black p-8 shadow-[6px_6px_0px_0px_#000000] mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Upload className="w-8 h-8 text-black" />
+            <h2 className="text-2xl font-black text-black tracking-wide">UPLOAD CSV FILE</h2>
+          </div>
+
+          {/* File Drop Zone */}
+          <div className="bg-white border-4 border-dashed border-black p-12 text-center shadow-[4px_4px_0px_0px_#000000] mb-6">
+            <FileText className="w-16 h-16 text-gray-600 mx-auto mb-6" />
+            <div className="space-y-4">
+              <Label htmlFor="csv-upload" className="cursor-pointer block">
+                <span className="text-2xl font-black text-black hover:text-gray-700 transition-colors">
+                  📁 DROP YOUR CSV FILE HERE OR CLICK TO BROWSE
+                </span>
+              </Label>
+              <Input id="csv-upload" type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+              <div className="bg-gray-100 border-2 border-black p-4 inline-block">
+                <p className="text-lg font-bold text-black">📋 SUPPORTED FORMAT: CSV WITH PRODUCT DATA COLUMNS</p>
               </div>
+            </div>
+          </div>
 
-              {uploadedFile && (
-                <Card className="bg-green-50 border-green-200">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <div>
-                          <p className="font-medium">{uploadedFile.name}</p>
-                          <p className="text-sm text-slate-600">
-                            {(uploadedFile.size / 1024).toFixed(1)} KB
-                          </p>
-                        </div>
-                      </div>
-                      <Button onClick={handleCSVProcess} disabled={loading}>
-                        {loading ? "Processing..." : "Process CSV"}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="manual" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sku">SKU *</Label>
-                  <Input
-                    id="sku"
-                    placeholder="Enter product SKU"
-                    value={manualData.sku}
-                    onChange={(e) => handleInputChange("sku", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={manualData.category}
-                    onValueChange={(value) =>
-                      handleInputChange("category", value)
-                    }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="food">Food & Beverage</SelectItem>
-                      <SelectItem value="clothing">Clothing</SelectItem>
-                      <SelectItem value="home">Home & Garden</SelectItem>
-                      <SelectItem value="health">Health & Beauty</SelectItem>
-                      <SelectItem value="sports">Sports & Outdoors</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="days_to_expiry">Days to Expiry</Label>
-                  <Input
-                    id="days_to_expiry"
-                    type="number"
-                    placeholder="Enter days to expiry"
-                    value={manualData.days_to_expiry}
-                    onChange={(e) =>
-                      handleInputChange("days_to_expiry", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="forecasted_demand">Forecasted Demand</Label>
-                  <Input
-                    id="forecasted_demand"
-                    type="number"
-                    placeholder="Enter forecasted demand"
-                    value={manualData.forecasted_demand}
-                    onChange={(e) =>
-                      handleInputChange("forecasted_demand", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="historical_sell_through">
-                    Historical Sell Through (%)
-                  </Label>
-                  <Input
-                    id="historical_sell_through"
-                    type="number"
-                    placeholder="Enter sell through percentage"
-                    value={manualData.historical_sell_through}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "historical_sell_through",
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleManualSubmit}
-                  disabled={!manualData.sku || loading}
-                  className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  {loading ? "Analyzing..." : "Analyze Product"}
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Results */}
-      {results && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Analysis Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {results.type === "single" ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Uploaded File Display */}
+          {uploadedFile && (
+            <div className="bg-green-200 border-4 border-black p-6 shadow-[4px_4px_0px_0px_#000000]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <CheckCircle className="w-8 h-8 text-green-700" />
                   <div>
-                    <Label className="text-sm font-medium text-slate-600">
-                      Product
-                    </Label>
-                    <p className="font-medium">
-                      {results.data.name} ({results.data.sku})
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-600">
-                    Predictions
-                  </Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-600">Spoilage Risk</p>
-                      <Badge variant="secondary" className="mt-1">
-                        {results.data.predictions.spoilage_label}
+                    <p className="text-xl font-black text-black">{uploadedFile.name}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Badge className="bg-black text-white font-bold border-2 border-black">
+                        📊 {(uploadedFile.size / 1024).toFixed(1)} KB
                       </Badge>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-600">Sustainability</p>
-                      <Badge variant="default" className="mt-1">
-                        {results.data.predictions.sustainability_label}
-                      </Badge>
-                    </div>
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-600">
-                        Suggested Markdown
-                      </p>
-                      <p className="text-lg font-semibold mt-1">
-                        {results.data.predictions.suggested_markdown_percent}%
-                      </p>
+                      <Badge className="bg-blue-500 text-white font-bold border-2 border-black">📄 CSV FILE</Badge>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <Button className="flex items-center gap-2" onClick={()=>handleDownload()}>
-                  <Download className="h-4 w-4" />
-                  Download Results CSV
+                <Button
+                  onClick={handleCSVProcess}
+                  disabled={loading}
+                  className="bg-green-500 hover:bg-green-600 text-white font-black text-xl py-4 px-8 border-4 border-black shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                      PROCESSING...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-6 h-6 mr-2" />
+                      PROCESS CSV
+                    </>
+                  )}
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </div>
+          )}
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-200 border-4 border-black p-6 shadow-[4px_4px_0px_0px_#000000] mb-8">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-8 h-8 text-red-700" />
+              <div>
+                <h3 className="text-xl font-black text-red-800 mb-2">❌ ERROR OCCURRED</h3>
+                <p className="text-lg font-bold text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success Display */}
+        {success && (
+          <div className="bg-green-200 border-4 border-black p-6 shadow-[4px_4px_0px_0px_#000000] mb-8">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-8 h-8 text-green-700" />
+              <div>
+                <h3 className="text-xl font-black text-green-800 mb-2">✅ SUCCESS!</h3>
+                <p className="text-lg font-bold text-green-700">
+                  Your CSV file has been processed and downloaded successfully!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Instructions Section */}
+        <div className="bg-purple-200 border-4 border-black p-8 shadow-[6px_6px_0px_0px_#000000]">
+          <h3 className="text-2xl font-black text-black mb-6 tracking-wide">📋 HOW IT WORKS</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white border-3 border-black p-6 shadow-[3px_3px_0px_0px_#000000]">
+              <div className="text-3xl font-black text-purple-600 mb-3">1️⃣</div>
+              <h4 className="text-lg font-black text-black mb-2">UPLOAD CSV</h4>
+              <p className="text-sm font-bold text-gray-700">
+                Upload your CSV file containing product data with all required columns
+              </p>
+            </div>
+
+            <div className="bg-white border-3 border-black p-6 shadow-[3px_3px_0px_0px_#000000]">
+              <div className="text-3xl font-black text-purple-600 mb-3">2️⃣</div>
+              <h4 className="text-lg font-black text-black mb-2">PROCESS DATA</h4>
+              <p className="text-sm font-bold text-gray-700">
+                Our AI analyzes each product and generates predictions for all items
+              </p>
+            </div>
+
+            <div className="bg-white border-3 border-black p-6 shadow-[3px_3px_0px_0px_#000000]">
+              <div className="text-3xl font-black text-purple-600 mb-3">3️⃣</div>
+              <h4 className="text-lg font-black text-black mb-2">DOWNLOAD RESULTS</h4>
+              <p className="text-sm font-bold text-gray-700">
+                Get your processed CSV with predictions, risk scores, and recommendations
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CSV Format Guide */}
+        <div className="bg-orange-200 border-4 border-black p-8 shadow-[6px_6px_0px_0px_#000000] mt-8">
+          <h3 className="text-2xl font-black text-black mb-6 tracking-wide">📊 CSV FORMAT REQUIREMENTS</h3>
+          <div className="bg-white border-3 border-black p-6 shadow-[3px_3px_0px_0px_#000000]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-lg font-black text-black mb-3">REQUIRED COLUMNS:</h4>
+                <ul className="space-y-2 text-sm font-bold text-gray-700">
+                  <li>• SKU (Product identifier)</li>
+                  <li>• Category (Product category)</li>
+                  <li>• Days_to_Expiry</li>
+                  <li>• Forecasted_Demand</li>
+                  <li>• Historical_Sell_Through</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-black mb-3">OPTIONAL COLUMNS:</h4>
+                <ul className="space-y-2 text-sm font-bold text-gray-700">
+                  <li>• Average_Turnover_Time</li>
+                  <li>• Overstock_Risk</li>
+                  <li>• Spoilage_Risk_Score</li>
+                  <li>• Sustainability metrics</li>
+                  <li>• Environmental scores</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
