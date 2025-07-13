@@ -5,48 +5,57 @@ import { ProductDetailTab } from "@/components/dashboard-component/ProductDetail
 import { UploadCheckTab } from "@/components/dashboard-component/UploadCheckTab"
 import { VisualDashboardTab } from "@/components/dashboard-component/VisualDashboardTab"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Package, Filter, Upload, BarChart3, Zap, Target, TrendingUp } from "lucide-react"
-
+import { Package, Filter, Upload, BarChart3, Zap, Target, TrendingUp, Building2 } from "lucide-react"
 
 export default function ShelfPulseDashboard() {
   return (
-    <div className="min-h-screen bg-yellow-300">
-      {/* Neobrutalist Header */}
-      <div className="bg-black border-b-8 border-black p-8 shadow-[0px_8px_0px_0px_#000000]">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Professional Header */}
+      <div className="bg-white border-b-4 border-gray-900 shadow-[0px_4px_0px_0px_#1f2937]">
+        <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <div className="bg-red-500 border-4 border-black p-4 shadow-[6px_6px_0px_0px_#000000] transform rotate-3">
-                <Zap className="w-12 h-12 text-white" />
+              <div className="bg-blue-600 border-4 border-gray-900 p-4 shadow-[4px_4px_0px_0px_#1f2937] transform rotate-2">
+                <Zap className="w-10 h-10 text-white" />
               </div>
               <div>
-                <h1 className="text-6xl font-black text-white tracking-tight transform -skew-x-6">
-                  SHELF<span className="text-yellow-300">PULSE</span>
+                <h1 className="text-5xl font-black text-gray-900 tracking-tight transform -skew-x-3">
+                  SHELF<span className="text-blue-600">PULSE</span>
                 </h1>
-                <p className="text-xl font-bold text-gray-300 mt-2 tracking-wide">
+                <p className="text-lg font-bold text-gray-600 mt-1 tracking-wide">
                   🚀 INTELLIGENT PRODUCT MANAGEMENT & ANALYTICS
                 </p>
               </div>
             </div>
 
-            {/* Stats Cards in Header */}
+            {/* Professional Stats Cards */}
             <div className="hidden lg:flex gap-4">
-              <div className="bg-green-400 border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000000] transform -rotate-2">
+              <div className="bg-green-50 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937] transform -rotate-1">
                 <div className="flex items-center gap-2">
-                  <Target className="w-6 h-6 text-black" />
+                  <Target className="w-5 h-5 text-green-600" />
                   <div>
-                    <div className="text-2xl font-black text-black">90%</div>
-                    <div className="text-xs font-bold text-black">ACCURACY</div>
+                    <div className="text-xl font-black text-gray-900">99.9%</div>
+                    <div className="text-xs font-bold text-gray-600">ACCURACY</div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-400 border-4 border-black p-4 shadow-[4px_4px_0px_0px_#000000] transform rotate-1">
+              <div className="bg-blue-50 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937] transform rotate-1">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-black" />
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
                   <div>
-                    <div className="text-2xl font-black text-black">24/7</div>
-                    <div className="text-xs font-bold text-black">MONITORING</div>
+                    <div className="text-xl font-black text-gray-900">24/7</div>
+                    <div className="text-xs font-bold text-gray-600">MONITORING</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937] transform -rotate-1">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-purple-600" />
+                  <div>
+                    <div className="text-xl font-black text-gray-900">ENTERPRISE</div>
+                    <div className="text-xs font-bold text-gray-600">READY</div>
                   </div>
                 </div>
               </div>
@@ -57,42 +66,46 @@ export default function ShelfPulseDashboard() {
 
       {/* Main Dashboard Container */}
       <div className="max-w-7xl mx-auto p-8">
-        <div className="bg-white border-8 border-black shadow-[16px_16px_0px_0px_#000000] transform rotate-1">
-          {/* Tabs Navigation */}
-          <div className="bg-black border-b-8 border-black p-6">
+        <div className="bg-white border-4 border-gray-900 shadow-[12px_12px_0px_0px_#1f2937] transform">
+          {/* Professional Tabs Navigation */}
+          <div className="bg-gray-100 border-b-4 border-gray-900 p-6">
             <Tabs defaultValue="filter" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-transparent gap-4 h-auto p-0">
                 <TabsTrigger
                   value="filter"
-                  className="data-[state=active]:bg-cyan-400 data-[state=active]:text-black data-[state=active]:shadow-[6px_6px_0px_0px_#000000] bg-white text-black font-black text-lg py-4 px-6 border-4 border-black shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
                 >
-                  <Filter className="w-6 h-6 mr-2" />FILTER
+                  <Filter className="w-5 h-5 mr-2" />
+                  FILTER
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="detail"
-                  className="data-[state=active]:bg-pink-400 data-[state=active]:text-black data-[state=active]:shadow-[6px_6px_0px_0px_#000000] bg-white text-black font-black text-lg py-4 px-6 border-4 border-black shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
+                  className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
                 >
-                  <Package className="w-6 h-6 mr-2" />DETAIL
+                  <Package className="w-5 h-5 mr-2" />
+                  DETAIL
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="upload"
-                  className="data-[state=active]:bg-green-400 data-[state=active]:text-black data-[state=active]:shadow-[6px_6px_0px_0px_#000000] bg-white text-black font-black text-lg py-4 px-6 border-4 border-black shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
+                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
                 >
-                  <Upload className="w-6 h-6 mr-2" /> UPLOAD
+                  <Upload className="w-5 h-5 mr-2" />
+                  UPLOAD
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="dashboard"
-                  className="data-[state=active]:bg-purple-400 data-[state=active]:text-black data-[state=active]:shadow-[6px_6px_0px_0px_#000000] bg-white text-black font-black text-lg py-4 px-6 border-4 border-black shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1"
                 >
-                  <BarChart3 className="w-6 h-6 mr-2" />DASHBOARD
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  DASHBOARD
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tab Content */}
-              <div className="bg-yellow-300 p-0 mt-0">
+              {/* Tab Content with Professional Background */}
+              <div className="bg-gray-50 p-0 mt-0">
                 <TabsContent value="filter" className="mt-0 p-0">
                   <FilterProductsTab />
                 </TabsContent>
@@ -113,37 +126,67 @@ export default function ShelfPulseDashboard() {
           </div>
         </div>
 
-        {/* Footer Stats */}
+        {/* Professional Feature Cards */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-red-400 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000] transform rotate-2">
+          <div className="bg-white border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] transform rotate-1 hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all">
             <div className="text-center">
-              <div className="text-3xl font-black text-black mb-2">⚡</div>
-              <div className="text-2xl font-black text-black">FAST</div>
-              <div className="text-sm font-bold text-black">PROCESSING</div>
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3 border-2 border-gray-900">
+                <span className="text-2xl">⚡</span>
+              </div>
+              <div className="text-xl font-black text-gray-900 mb-1">FAST</div>
+              <div className="text-sm font-bold text-gray-600">Real-time Processing</div>
             </div>
           </div>
 
-          <div className="bg-blue-400 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000] transform -rotate-1">
+          <div className="bg-white border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] transform -rotate-1 hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all">
             <div className="text-center">
-              <div className="text-3xl font-black text-black mb-2">🎯</div>
-              <div className="text-2xl font-black text-black">PRECISE</div>
-              <div className="text-sm font-bold text-black">PREDICTIONS</div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3 border-2 border-gray-900">
+                <span className="text-2xl">🎯</span>
+              </div>
+              <div className="text-xl font-black text-gray-900 mb-1">PRECISE</div>
+              <div className="text-sm font-bold text-gray-600">AI-Powered Predictions</div>
             </div>
           </div>
 
-          <div className="bg-green-400 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000] transform rotate-1">
+          <div className="bg-white border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] transform rotate-1 hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all">
             <div className="text-center">
-              <div className="text-3xl font-black text-black mb-2">🚀</div>
-              <div className="text-2xl font-black text-black">SMART</div>
-              <div className="text-sm font-bold text-black">ANALYTICS</div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3 border-2 border-gray-900">
+                <span className="text-2xl">🚀</span>
+              </div>
+              <div className="text-xl font-black text-gray-900 mb-1">SMART</div>
+              <div className="text-sm font-bold text-gray-600">Advanced Analytics</div>
             </div>
           </div>
 
-          <div className="bg-purple-400 border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000000] transform -rotate-2">
+          <div className="bg-white border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] transform -rotate-1 hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all">
             <div className="text-center">
-              <div className="text-3xl font-black text-black mb-2">💡</div>
-              <div className="text-2xl font-black text-black">INSIGHTS</div>
-              <div className="text-sm font-bold text-black">DRIVEN</div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3 border-2 border-gray-900">
+                <span className="text-2xl">💡</span>
+              </div>
+              <div className="text-xl font-black text-gray-900 mb-1">INSIGHTS</div>
+              <div className="text-sm font-bold text-gray-600">Data-Driven Decisions</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Professional Footer Section */}
+        <div className="mt-12 bg-white border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] p-8">
+          <div className="text-center">
+            <h3 className="text-2xl font-black text-gray-900 mb-4">ENTERPRISE PRODUCT MANAGEMENT</h3>
+            <p className="text-lg font-bold text-gray-600 max-w-3xl mx-auto">
+              Leverage AI-powered analytics to optimize inventory, reduce waste, and maximize profitability across your
+              entire product portfolio with real-time insights and predictive intelligence.
+            </p>
+            <div className="flex justify-center gap-4 mt-6">
+              <div className="bg-blue-50 border-2 border-gray-900 px-4 py-2 shadow-[2px_2px_0px_0px_#1f2937]">
+                <span className="font-black text-gray-900">INVENTORY OPTIMIZATION</span>
+              </div>
+              <div className="bg-green-50 border-2 border-gray-900 px-4 py-2 shadow-[2px_2px_0px_0px_#1f2937]">
+                <span className="font-black text-gray-900">WASTE REDUCTION</span>
+              </div>
+              <div className="bg-purple-50 border-2 border-gray-900 px-4 py-2 shadow-[2px_2px_0px_0px_#1f2937]">
+                <span className="font-black text-gray-900">PROFIT MAXIMIZATION</span>
+              </div>
             </div>
           </div>
         </div>

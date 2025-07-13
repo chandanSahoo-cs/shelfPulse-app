@@ -1,529 +1,624 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+import ReactFlow, { Background, Controls, MiniMap, type Node, type Edge } from "react-flow-renderer"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  ScatterChart,
-  Scatter,
-} from "recharts"
-import {
-  TrendingUp,
-  PieChartIcon,
-  BarChart3,
-  ScatterChartIcon as ScatterIcon,
-  Activity,
-  Eye,
-  Grid3X3,
-} from "lucide-react"
+import { Search, Package, Loader2 } from "lucide-react"
 
-// Mock data for charts (keep existing data)
-const spoilageRiskData = [
-  { risk: "Low", count: 45, color: "#10b981" },
-  { risk: "Medium", count: 32, color: "#f59e0b" },
-  { risk: "High", count: 18, color: "#ef4444" },
-]
-
-const markdownDemandData = [
-  { forecasted_demand: 50, suggested_markdown: 25 },
-  { forecasted_demand: 75, suggested_markdown: 20 },
-  { forecasted_demand: 100, suggested_markdown: 15 },
-  { forecasted_demand: 125, suggested_markdown: 12 },
-  { forecasted_demand: 150, suggested_markdown: 10 },
-  { forecasted_demand: 175, suggested_markdown: 8 },
-  { forecasted_demand: 200, suggested_markdown: 5 },
-  { forecasted_demand: 225, suggested_markdown: 3 },
-  { forecasted_demand: 250, suggested_markdown: 2 },
-]
-
-const sustainabilityData = [
-  { label: "Green", value: 60, color: "#10b981" },
-  { label: "Yellow", value: 25, color: "#f59e0b" },
-  { label: "Red", value: 15, color: "#ef4444" },
-]
-
-const categoryWasteData = [
-  { category: "Electronics", waste_risk: 0.35 },
-  { category: "Food & Beverage", waste_risk: 0.65 },
-  { category: "Clothing", waste_risk: 0.25 },
-  { category: "Home & Garden", waste_risk: 0.45 },
-  { category: "Health & Beauty", waste_risk: 0.3 },
-  { category: "Sports & Outdoors", waste_risk: 0.2 },
-]
-
-const expiryHistogramData = [
-  { days: "0-7", count: 12 },
-  { days: "8-14", count: 18 },
-  { days: "15-30", count: 25 },
-  { days: "31-60", count: 35 },
-  { days: "61-90", count: 28 },
-  { days: "91-180", count: 22 },
-  { days: "181-365", count: 15 },
-  { days: "365+", count: 8 },
-]
-
-const COLORS = ["#10b981", "#f59e0b", "#ef4444"]
-
-// Dashboard configuration
-const DASHBOARD_OPTIONS = [
-  {
-    id: "spoilage-risk",
-    title: "Spoilage Risk Distribution",
-    description: "Count of products by spoilage risk level",
-    icon: BarChart3,
-    category: "Risk Analysis",
-  },
-  {
-    id: "markdown-demand",
-    title: "Markdown % vs Forecasted Demand",
-    description: "Relationship between demand forecast and suggested markdown",
-    icon: ScatterIcon,
-    category: "Pricing Analysis",
-  },
-  {
-    id: "sustainability",
-    title: "Sustainability Label Breakdown",
-    description: "Distribution of sustainability ratings",
-    icon: PieChartIcon,
-    category: "Sustainability",
-  },
-  {
-    id: "category-waste",
-    title: "Category vs Average Waste Risk",
-    description: "Average waste risk index by product category",
-    icon: TrendingUp,
-    category: "Category Analysis",
-  },
-  {
-    id: "expiry-histogram",
-    title: "Predicted Expiry Histogram",
-    description: "Distribution of products by days to expiry",
-    icon: Activity,
-    category: "Inventory Management",
-  },
-  {
-    id: "overview",
-    title: "Complete Overview",
-    description: "View all dashboards in a comprehensive layout",
-    icon: Grid3X3,
-    category: "Overview",
-  },
-]
-
-export function VisualDashboardTab() {
-  const [selectedDashboard, setSelectedDashboard] = useState<string>("")
-  const [viewMode, setViewMode] = useState<"select" | "view">("select")
-
-  const handleDashboardSelect = (dashboardId: string) => {
-    setSelectedDashboard(dashboardId)
-    setViewMode("view")
+// =========================
+// Types
+// =========================
+type Product = {
+  sku: string
+  features: {
+    Dead_Inventory_Flag: number
+    Historical_Sell_Through: number
+    Waste_Risk_Index: number
+    Days_to_Expiry: number
+    Forecasted_Demand: number
+    category: string
   }
-
-  const handleBackToSelection = () => {
-    setViewMode("select")
-    setSelectedDashboard("")
+  prediction: {
+    trigger_markdown: boolean
+    forecasted_demand_pred: number
+    spoilage_risk: "Green" | "Yellow" | "Red"
+    days_to_expiry_pred: number
+    dead_stock: boolean
+    suggested_markdown_percent: number
   }
+}
 
-  const renderSelectedDashboard = () => {
-    switch (selectedDashboard) {
-      case "spoilage-risk":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Spoilage Risk Distribution
-              </CardTitle>
-              <CardDescription>Count of products by spoilage risk level</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={spoilageRiskData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="risk" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )
+interface FlowGraph {
+  nodes: Node[]
+  edges: Edge[]
+}
 
-      case "markdown-demand":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ScatterIcon className="h-5 w-5" />
-                Markdown % vs Forecasted Demand
-              </CardTitle>
-              <CardDescription>Relationship between demand forecast and suggested markdown</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <ScatterChart data={markdownDemandData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="forecasted_demand" name="Forecasted Demand" unit=" units" />
-                  <YAxis dataKey="suggested_markdown" name="Suggested Markdown" unit="%" />
-                  <Tooltip
-                    cursor={{ strokeDasharray: "3 3" }}
-                    formatter={(value, name) => [
-                      `${value}${name === "suggested_markdown" ? "%" : " units"}`,
-                      name === "suggested_markdown" ? "Markdown" : "Demand",
-                    ]}
-                  />
-                  <Scatter dataKey="suggested_markdown" fill="#8884d8" />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )
+// =========================
+// Graph Generators
+// =========================
+const generateMarkdownFlow = (product: Product): FlowGraph => {
+  const { features, prediction } = product
 
-      case "sustainability":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Sustainability Label Breakdown
-              </CardTitle>
-              <CardDescription>Distribution of sustainability ratings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={sustainabilityData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={150}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {sustainabilityData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex justify-center gap-4 mt-4">
-                {sustainabilityData.map((entry, index) => (
-                  <div key={entry.label} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <span className="text-sm">
-                      {entry.label}: {entry.value}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )
+  const checks = [
+    {
+      id: "dead_inventory",
+      label: "💀 DEAD INVENTORY",
+      condition: features.Dead_Inventory_Flag === 1,
+      description: "Stock not moving",
+    },
+    {
+      id: "low_demand",
+      label: "📉 LOW DEMAND",
+      condition: prediction.forecasted_demand_pred < 1.0,
+      description: `Demand: ${prediction.forecasted_demand_pred.toFixed(2)}`,
+    },
+    {
+      id: "high_spoilage",
+      label: "🔴 HIGH SPOILAGE",
+      condition: prediction.spoilage_risk === "Red",
+      description: `Risk: ${prediction.spoilage_risk}`,
+    },
+    {
+      id: "low_sell_through",
+      label: "📊 LOW SELL-THROUGH",
+      condition: features.Historical_Sell_Through < 0.5,
+      description: `Rate: ${(features.Historical_Sell_Through * 100).toFixed(1)}%`,
+    },
+    {
+      id: "low_days_expiry",
+      label: "⏰ EXPIRING SOON",
+      condition: prediction.days_to_expiry_pred < 5,
+      description: `${prediction.days_to_expiry_pred} days left`,
+    },
+    {
+      id: "high_waste_risk",
+      label: "🗑️ HIGH WASTE RISK",
+      condition: features.Waste_Risk_Index > 0.7,
+      description: `Risk: ${(features.Waste_Risk_Index * 100).toFixed(1)}%`,
+    },
+  ]
 
-      case "category-waste":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Category vs Average Waste Risk
-              </CardTitle>
-              <CardDescription>Average waste risk index by product category</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={categoryWasteData} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 1]} />
-                  <YAxis dataKey="category" type="category" width={120} />
-                  <Tooltip formatter={(value) => [`${((value as number) * 100).toFixed(1)}%`, "Waste Risk"]} />
-                  <Bar dataKey="waste_risk" fill="#f59e0b" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )
+  const nodes: Node[] = checks.map((check, i) => ({
+    id: check.id,
+    position: { x: 280 * (i % 3), y: Math.floor(i / 3) * 140 },
+    data: {
+      label: (
+        <div className="text-center p-3 w-full h-full flex flex-col justify-center">
+          <div className="font-black text-xs mb-2 leading-tight break-words">{check.label}</div>
+          <div className="text-xs font-bold leading-tight break-words">{check.description}</div>
+        </div>
+      ),
+    },
+    style: {
+      background: check.condition ? "#16a34a" : "#dc2626",
+      border: "4px solid #1f2937",
+      borderRadius: 0,
+      color: "white",
+      fontWeight: "bold",
+      width: 240,
+      height: 100,
+      boxShadow: "4px 4px 0px 0px #1f2937",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+  }))
 
-      case "expiry-histogram":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Predicted Expiry Histogram
-              </CardTitle>
-              <CardDescription>Distribution of products by days to expiry</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={expiryHistogramData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="days" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#6366f1" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )
-
-      case "overview":
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Spoilage Risk Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Spoilage Risk Distribution
-                  </CardTitle>
-                  <CardDescription>Count of products by spoilage risk level</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={spoilageRiskData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="risk" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Sustainability Label Breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChartIcon className="h-5 w-5" />
-                    Sustainability Label Breakdown
-                  </CardTitle>
-                  <CardDescription>Distribution of sustainability ratings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={sustainabilityData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {sustainabilityData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="flex justify-center gap-4 mt-4">
-                    {sustainabilityData.map((entry, index) => (
-                      <div key={entry.label} className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="text-sm">
-                          {entry.label}: {entry.value}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Markdown vs Forecasted Demand */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ScatterIcon className="h-5 w-5" />
-                    Markdown % vs Forecasted Demand
-                  </CardTitle>
-                  <CardDescription>Relationship between demand forecast and suggested markdown</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <ScatterChart data={markdownDemandData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="forecasted_demand" name="Forecasted Demand" unit=" units" />
-                      <YAxis dataKey="suggested_markdown" name="Suggested Markdown" unit="%" />
-                      <Tooltip
-                        cursor={{ strokeDasharray: "3 3" }}
-                        formatter={(value, name) => [
-                          `${value}${name === "suggested_markdown" ? "%" : " units"}`,
-                          name === "suggested_markdown" ? "Markdown" : "Demand",
-                        ]}
-                      />
-                      <Scatter dataKey="suggested_markdown" fill="#8884d8" />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              {/* Category vs Average Waste Risk */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Category vs Average Waste Risk
-                  </CardTitle>
-                  <CardDescription>Average waste risk index by product category</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={categoryWasteData} layout="horizontal">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 1]} />
-                      <YAxis dataKey="category" type="category" width={100} />
-                      <Tooltip formatter={(value) => [`${((value as number) * 100).toFixed(1)}%`, "Waste Risk"]} />
-                      <Bar dataKey="waste_risk" fill="#f59e0b" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Predicted Expiry Histogram */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Predicted Expiry Histogram
-                </CardTitle>
-                <CardDescription>Distribution of products by days to expiry</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={expiryHistogramData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="days" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#6366f1" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+  // Add result node
+  nodes.push({
+    id: "trigger_markdown",
+    position: { x: 280, y: 320 },
+    data: {
+      label: (
+        <div className="text-center p-4 w-full h-full flex flex-col justify-center">
+          <div className="font-black text-sm mb-2 leading-tight">
+            {prediction.trigger_markdown ? "✅ TRIGGER MARKDOWN" : "❌ NO MARKDOWN"}
           </div>
-        )
+          <div className="text-xs font-bold leading-tight break-words">
+            {prediction.suggested_markdown_percent > 0
+              ? `${prediction.suggested_markdown_percent}% OFF`
+              : "No discount needed"}
+          </div>
+        </div>
+      ),
+    },
+    style: {
+      background: prediction.trigger_markdown ? "#f59e0b" : "#6b7280",
+      border: "6px solid #1f2937",
+      borderRadius: 0,
+      color: prediction.trigger_markdown ? "#1f2937" : "white",
+      fontWeight: "bold",
+      width: 280,
+      height: 120,
+      boxShadow: "6px 6px 0px 0px #1f2937",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+  })
 
-      default:
-        return null
+  const edges: Edge[] = checks.map((check) => ({
+    id: `e_${check.id}_trigger`,
+    source: check.id,
+    target: "trigger_markdown",
+    label: check.condition ? "YES" : "NO",
+    animated: check.condition,
+    style: {
+      stroke: check.condition ? "#16a34a" : "#dc2626",
+      strokeWidth: 4,
+    },
+    labelStyle: {
+      fontWeight: "bold",
+      fontSize: "12px",
+      color: "#1f2937",
+    },
+  }))
+
+  return { nodes, edges }
+}
+
+const generateSustainabilityFlow = (product: Product): FlowGraph => {
+  const { features, prediction } = product
+
+  const nodes: Node[] = [
+    {
+      id: "waste_risk",
+      position: { x: 0, y: 0 },
+      data: {
+        label: (
+          <div className="text-center p-3 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-xs mb-2 leading-tight">🗑️ WASTE RISK</div>
+            <div className="text-xs font-bold leading-tight">{(features.Waste_Risk_Index * 100).toFixed(1)}%</div>
+          </div>
+        ),
+      },
+      style: {
+        background: "#f59e0b",
+        border: "4px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 180,
+        height: 100,
+        boxShadow: "4px 4px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+    {
+      id: "sell_through",
+      position: { x: 220, y: 0 },
+      data: {
+        label: (
+          <div className="text-center p-3 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-xs mb-2 leading-tight">📊 SELL THROUGH</div>
+            <div className="text-xs font-bold leading-tight">
+              {(features.Historical_Sell_Through * 100).toFixed(1)}%
+            </div>
+          </div>
+        ),
+      },
+      style: {
+        background: "#2563eb",
+        border: "4px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 180,
+        height: 100,
+        boxShadow: "4px 4px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+    {
+      id: "label",
+      position: { x: 110, y: 150 },
+      data: {
+        label: (
+          <div className="text-center p-4 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-sm mb-2 leading-tight">🌱 SUSTAINABILITY</div>
+            <div className="text-xs font-bold leading-tight break-words">{prediction.spoilage_risk} LABEL</div>
+          </div>
+        ),
+      },
+      style: {
+        background:
+          prediction.spoilage_risk === "Green"
+            ? "#16a34a"
+            : prediction.spoilage_risk === "Yellow"
+              ? "#f59e0b"
+              : "#dc2626",
+        border: "6px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 220,
+        height: 120,
+        boxShadow: "6px 6px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+  ]
+
+  const edges: Edge[] = [
+    {
+      id: "e1",
+      source: "waste_risk",
+      target: "label",
+      label: "WASTE",
+      style: { stroke: "#1f2937", strokeWidth: 3 },
+      labelStyle: { fontWeight: "bold", fontSize: "12px" },
+    },
+    {
+      id: "e2",
+      source: "sell_through",
+      target: "label",
+      label: "PERFORMANCE",
+      style: { stroke: "#1f2937", strokeWidth: 3 },
+      labelStyle: { fontWeight: "bold", fontSize: "12px" },
+    },
+  ]
+
+  return { nodes, edges }
+}
+
+const generateSpoilageRiskFlow = (product: Product): FlowGraph => {
+  const { prediction } = product
+
+  const nodes: Node[] = [
+    {
+      id: "expiry",
+      position: { x: 0, y: 0 },
+      data: {
+        label: (
+          <div className="text-center p-3 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-xs mb-2 leading-tight">⏰ DAYS TO EXPIRY</div>
+            <div className="text-xs font-bold leading-tight">{prediction.days_to_expiry_pred} DAYS</div>
+          </div>
+        ),
+      },
+      style: {
+        background: "#dc2626",
+        border: "4px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 180,
+        height: 100,
+        boxShadow: "4px 4px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+    {
+      id: "demand",
+      position: { x: 220, y: 0 },
+      data: {
+        label: (
+          <div className="text-center p-3 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-xs mb-2 leading-tight">📈 DEMAND</div>
+            <div className="text-xs font-bold leading-tight">{prediction.forecasted_demand_pred.toFixed(2)}</div>
+          </div>
+        ),
+      },
+      style: {
+        background: "#2563eb",
+        border: "4px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 180,
+        height: 100,
+        boxShadow: "4px 4px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+    {
+      id: "spoilage",
+      position: { x: 110, y: 150 },
+      data: {
+        label: (
+          <div className="text-center p-4 w-full h-full flex flex-col justify-center">
+            <div className="font-black text-sm mb-2 leading-tight">🚨 SPOILAGE RISK</div>
+            <div className="text-xs font-bold leading-tight break-words">{prediction.spoilage_risk} LEVEL</div>
+          </div>
+        ),
+      },
+      style: {
+        background:
+          prediction.spoilage_risk === "Red"
+            ? "#dc2626"
+            : prediction.spoilage_risk === "Yellow"
+              ? "#f59e0b"
+              : "#16a34a",
+        border: "6px solid #1f2937",
+        borderRadius: 0,
+        color: "white",
+        fontWeight: "bold",
+        width: 220,
+        height: 120,
+        boxShadow: "6px 6px 0px 0px #1f2937",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      },
+    },
+  ]
+
+  const edges: Edge[] = [
+    {
+      id: "e1",
+      source: "expiry",
+      target: "spoilage",
+      label: "TIME FACTOR",
+      style: { stroke: "#1f2937", strokeWidth: 3 },
+      labelStyle: { fontWeight: "bold", fontSize: "12px" },
+    },
+    {
+      id: "e2",
+      source: "demand",
+      target: "spoilage",
+      label: "DEMAND FACTOR",
+      style: { stroke: "#1f2937", strokeWidth: 3 },
+      labelStyle: { fontWeight: "bold", fontSize: "12px" },
+    },
+  ]
+
+  return { nodes, edges }
+}
+
+// =========================
+// Component
+// =========================
+export const VisualDashboardTab = () => {
+  const [data, setData] = useState<Product[]>([])
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [viewType, setViewType] = useState<"markdown" | "sustainability" | "spoilage">("markdown")
+  const [flowData, setFlowData] = useState<FlowGraph>({ nodes: [], edges: [] })
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const filteredData = data.filter((product) => product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  useEffect(() => {
+    setLoading(true)
+    fetch("https://shelfpulse.onrender.com/api/v1/products")
+      .then((res) => res.json())
+      .then((json: Product[]) => {
+        setData(json)
+        if (json.length > 0) {
+          setFlowData(generateMarkdownFlow(json[0]))
+        }
+        setLoading(false)
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error)
+        setLoading(false)
+      })
+  }, [])
+
+  useEffect(() => {
+    if (data.length === 0) return
+    const product = data[selectedIndex]
+    const graph =
+      viewType === "markdown"
+        ? generateMarkdownFlow(product)
+        : viewType === "sustainability"
+          ? generateSustainabilityFlow(product)
+          : generateSpoilageRiskFlow(product)
+    setFlowData(graph)
+  }, [viewType, selectedIndex, data])
+
+  const handleSkuSelect = (sku: string) => {
+    const index = data.findIndex((p) => p.sku === sku)
+    if (index !== -1) {
+      setSelectedIndex(index)
+      setSearchTerm("")
+      setIsDropdownOpen(false)
     }
   }
 
-  if (viewMode === "select") {
+  if (loading) {
     return (
-      <div className="space-y-6">
-        {/* Dashboard Selection Header */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Select Dashboard View
-            </CardTitle>
-            <CardDescription>Choose which analytics dashboard you want to explore</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Quick Select</label>
-                <Select value={selectedDashboard} onValueChange={handleDashboardSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a dashboard..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DASHBOARD_OPTIONS.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Dashboard Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {DASHBOARD_OPTIONS.map((option) => {
-            const IconComponent = option.icon
-            return (
-              <Card
-                key={option.id}
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
-                onClick={() => handleDashboardSelect(option.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <IconComponent className="h-6 w-6 text-blue-600" />
-                    <Badge variant="outline" className="text-xs">
-                      {option.category}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg">{option.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm">{option.description}</CardDescription>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-3 bg-transparent"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDashboardSelect(option.id)
-                    }}
-                  >
-                    View Dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-            )
-          })}
+      <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
+        <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin mr-4 text-blue-600" />
+            <span className="text-2xl font-black text-gray-900">LOADING DASHBOARD...</span>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Back Navigation */}
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={handleBackToSelection} className="flex items-center gap-2 bg-transparent">
-          ← Back to Dashboard Selection
-        </Button>
-        <Badge variant="secondary" className="flex items-center gap-2">
-          <Eye className="h-3 w-3" />
-          {DASHBOARD_OPTIONS.find((d) => d.id === selectedDashboard)?.title}
-        </Badge>
+    <div className="max-w-7xl mx-auto p-8 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8 mb-8">
+        <div className="mb-6">
+          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">📊 VISUAL FLOW DASHBOARD</h1>
+          <div className="w-24 h-2 bg-blue-600"></div>
+        </div>
+
+        {/* Controls Section */}
+        <div className="bg-blue-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] mb-6">
+          <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">🔍 SELECT PRODUCT</Label>
+
+          {/* Searchable SKU Dropdown */}
+          <div className="relative mb-6">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label className="text-sm font-bold text-gray-900 mb-2 block">SEARCH SKU</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
+                  <Input
+                    placeholder="Type to search SKU..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value)
+                      setIsDropdownOpen(true)
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    className="pl-10 border-4 border-gray-900 bg-white text-gray-900 font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#1f2937] focus:shadow-[6px_6px_0px_0px_#1f2937] transition-all"
+                  />
+                </div>
+
+                {/* Dropdown Results */}
+                {isDropdownOpen && searchTerm && (
+                  <div className="absolute z-10 w-full mt-2 bg-white border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] max-h-60 overflow-y-auto">
+                    {filteredData.length > 0 ? (
+                      filteredData.slice(0, 10).map((product) => (
+                        <div
+                          key={product.sku}
+                          onClick={() => handleSkuSelect(product.sku)}
+                          className="p-3 hover:bg-blue-50 cursor-pointer border-b-2 border-gray-900 font-bold text-gray-900 flex items-center justify-between"
+                        >
+                          <span>{product.sku}</span>
+                          <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900">
+                            {product.features.category?.toUpperCase() || "N/A"}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center font-bold text-gray-600">No SKUs found</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1">
+                <Label className="text-sm font-bold text-gray-900 mb-2 block">CURRENT SELECTION</Label>
+                <div className="bg-white border-4 border-gray-900 p-3 shadow-[4px_4px_0px_0px_#1f2937] h-12 flex items-center">
+                  <Package className="w-5 h-5 mr-2 text-blue-600" />
+                  <span className="font-black text-lg text-gray-900">{data[selectedIndex]?.sku || "No selection"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* View Type Buttons */}
+          <div className="mb-4">
+            <Label className="text-sm font-bold text-gray-900 mb-2 block">ANALYSIS TYPE</Label>
+            <div className="flex gap-4">
+              <Button
+                onClick={() => setViewType("markdown")}
+                className={`font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
+                  viewType === "markdown" ? "bg-red-600 text-white" : "bg-white text-gray-900 hover:bg-red-50"
+                }`}
+              >
+                🏷️ MARKDOWN FLOW
+              </Button>
+
+              <Button
+                onClick={() => setViewType("sustainability")}
+                className={`font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
+                  viewType === "sustainability" ? "bg-green-600 text-white" : "bg-white text-gray-900 hover:bg-green-50"
+                }`}
+              >
+                🌱 SUSTAINABILITY
+              </Button>
+
+              <Button
+                onClick={() => setViewType("spoilage")}
+                className={`font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
+                  viewType === "spoilage" ? "bg-amber-500 text-white" : "bg-white text-gray-900 hover:bg-amber-50"
+                }`}
+              >
+                🚨 SPOILAGE RISK
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Info Card */}
+        {data[selectedIndex] && (
+          <div className="bg-indigo-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] mb-6">
+            <h3 className="text-xl font-black text-gray-900 mb-4">📦 PRODUCT OVERVIEW</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white border-2 border-gray-900 p-3 text-center">
+                <div className="font-bold text-sm text-gray-700">CATEGORY</div>
+                <div className="font-black text-lg text-gray-900">
+                  {data[selectedIndex].features.category?.toUpperCase() || "N/A"}
+                </div>
+              </div>
+              <div className="bg-white border-2 border-gray-900 p-3 text-center">
+                <div className="font-bold text-sm text-gray-700">EXPIRES IN</div>
+                <div className="font-black text-lg text-red-600">
+                  {data[selectedIndex].prediction.days_to_expiry_pred} DAYS
+                </div>
+              </div>
+              <div className="bg-white border-2 border-gray-900 p-3 text-center">
+                <div className="font-bold text-sm text-gray-700">DEMAND</div>
+                <div className="font-black text-lg text-blue-600">
+                  {data[selectedIndex].prediction.forecasted_demand_pred.toFixed(2)}
+                </div>
+              </div>
+              <div className="bg-white border-2 border-gray-900 p-3 text-center">
+                <div className="font-bold text-sm text-gray-700">RISK LEVEL</div>
+                <div
+                  className={`font-black text-lg ${
+                    data[selectedIndex].prediction.spoilage_risk === "Red"
+                      ? "text-red-600"
+                      : data[selectedIndex].prediction.spoilage_risk === "Yellow"
+                        ? "text-amber-600"
+                        : "text-green-600"
+                  }`}
+                >
+                  {data[selectedIndex].prediction.spoilage_risk.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Selected Dashboard */}
-      {renderSelectedDashboard()}
+      {/* Flow Graph */}
+      <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
+        <h2 className="text-3xl font-black text-gray-900 mb-6 tracking-tight">
+          {viewType === "markdown" && "🏷️ MARKDOWN DECISION FLOW"}
+          {viewType === "sustainability" && "🌱 SUSTAINABILITY ANALYSIS"}
+          {viewType === "spoilage" && "🚨 SPOILAGE RISK ASSESSMENT"}
+        </h2>
+
+        <div className="border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] bg-gray-50" style={{ height: 500 }}>
+          <ReactFlow nodes={flowData.nodes} edges={flowData.edges} fitView attributionPosition="bottom-left">
+            <Background color="#1f2937" gap={20} size={2} />
+            <MiniMap
+              style={{
+                background: "#ffffff",
+                border: "3px solid #1f2937",
+              }}
+              maskColor="rgba(0, 0, 0, 0.1)"
+            />
+            <Controls
+              style={{
+                background: "#ffffff",
+                border: "3px solid #1f2937",
+              }}
+            />
+          </ReactFlow>
+        </div>
+      </div>
     </div>
   )
 }
