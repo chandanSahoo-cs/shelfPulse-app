@@ -1,6 +1,5 @@
 "use client";
 
-import { FaTag } from "react-icons/fa"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,12 +15,15 @@ import {
 } from "@/components/ui/select";
 import {
   AlertTriangle,
+  BanIcon,
   CheckCircle,
+  CheckIcon,
   Circle,
   Clock,
   Leaf,
   Loader2,
   Package,
+  RefreshCw,
   SearchIcon,
   TrendingDown,
   TrendingDownIcon,
@@ -29,6 +31,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { FaTag } from "react-icons/fa";
 
 type Filters = {
   expireMinThan?: number;
@@ -226,9 +229,53 @@ export function FilterProductsTab() {
     }
   };
 
+  const [isCacheLoading, setIsCacheLoading] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
+  const [cacheSuccess, setCacheSuccess] = useState<boolean | null>(null);
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       handlePageChange(currentPage + 1);
+    }
+  };
+
+  const handleRunCache = async () => {
+    setIsCacheLoading(true);
+    setCacheMessage(null);
+    setCacheSuccess(null);
+
+    try {
+      const response = await fetch(
+        "https://shelfpulse.onrender.com/api/v1/run_cache",
+        {
+          method: "POST",
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.text();
+        setCacheMessage("Cache refreshed successfully!");
+        setCacheSuccess(true);
+      } else {
+        setCacheMessage(
+          `Cache refresh failed: ${response.status} ${response.statusText}`
+        );
+        setCacheSuccess(false);
+      }
+    } catch (error) {
+      setCacheMessage(
+        `Cache refresh error: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+      setCacheSuccess(false);
+    } finally {
+      setIsCacheLoading(false);
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setCacheMessage(null);
+        setCacheSuccess(null);
+      }, 5000);
     }
   };
 
@@ -242,6 +289,37 @@ export function FilterProductsTab() {
             PRODUCT FILTERS
           </h1>
           <div className="w-24 h-2 bg-blue-600"></div>
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              onClick={handleRunCache}
+              disabled={isCacheLoading}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] hover:shadow-[8px_8px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50">
+              {isCacheLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  REFRESHING...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2" />
+                  Refresh cache
+                </>
+              )}
+            </Button>
+
+            {/* Cache Status Message */}
+            {cacheMessage && (
+              <div
+                className={`px-4 py-2 border-3 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] font-bold text-sm`}>
+                {cacheSuccess ? (
+                  <CheckIcon className="size-6" stroke="#00c950" />
+                ) : (
+                  <BanIcon className="size-6 " stroke="#fb2c36" />
+                )}{" "}
+                {cacheMessage}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filter Selection */}
@@ -548,7 +626,9 @@ export function FilterProductsTab() {
                   SEARCHING...
                 </>
               ) : (
-                <><SearchIcon className="size-6"/> FILTER PRODUCTS</>
+                <>
+                  <SearchIcon className="size-6" /> FILTER PRODUCTS
+                </>
               )}
             </Button>
           </div>
@@ -689,17 +769,18 @@ export function FilterProductsTab() {
                       <div className="flex gap-3 mb-4">
                         {product.prediction.dead_stock && (
                           <Badge className="bg-red-600 text-white font-bold border-2 border-gray-900 flex gap-2">
-                            <AlertTriangle className="size-6"/> DEAD STOCK
+                            <AlertTriangle className="size-6" /> DEAD STOCK
                           </Badge>
                         )}
                         {product.prediction.trigger_markdown && (
                           <Badge className="bg-amber-500 text-white font-bold border-2 border-gray-900 flex gap-2">
-                            <FaTag className="size-6"/> MARKDOWN TRIGGER
+                            <FaTag className="size-6" /> MARKDOWN TRIGGER
                           </Badge>
                         )}
                         {product.prediction.suggested_markdown_percent > 0 && (
                           <Badge className="bg-yellow-500 text-gray-900 font-bold border-2 border-gray-900 flex gap-2">
-                            <TrendingDownIcon className="size-6"/> {product.prediction.suggested_markdown_percent}%
+                            <TrendingDownIcon className="size-6" />{" "}
+                            {product.prediction.suggested_markdown_percent}%
                             MARKDOWN
                           </Badge>
                         )}
