@@ -1,70 +1,86 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, FileText, Upload, Loader2, Download, AlertCircle } from "lucide-react"
-import { useState } from "react"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertCircle,
+  BarChart2Icon,
+  CheckCircle,
+  Download,
+  FileText,
+  FileTextIcon,
+  Loader2,
+  NotebookIcon,
+  TrendingDown,
+  Upload,
+} from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 export function UploadCheckTab() {
-  const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      console.log(file)
-      setUploadedFile(file)
-      setError(null)
-      setSuccess(false)
+      console.log(file);
+      setUploadedFile(file);
+      setError(null);
+      setSuccess(false);
     }
-  }
+  };
 
   const handleCSVProcess = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      setSuccess(false)
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
 
       if (!uploadedFile) {
-        setError("Please upload a file first")
-        return
+        setError("Please upload a file first");
+        return;
       }
 
-      const formData = new FormData()
-      formData.append("file", uploadedFile)
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
 
-      const res = await fetch(`https://shelfpulse.onrender.com/api/v1/predict_csv`, {
-        method: "POST",
-        body: formData,
-      })
+      const res = await fetch(
+        `https://shelfpulse.onrender.com/api/v1/predict_csv`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
-        throw new Error(`Failed to process file: ${res.statusText}`)
+        throw new Error(`Failed to process file: ${res.statusText}`);
       }
 
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = "result.csv"
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "result.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
 
-      setSuccess(true)
+      setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process CSV file")
-      console.log(err)
+      setError(
+        err instanceof Error ? err.message : "Failed to process CSV file"
+      );
+      console.log(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-8 bg-gray-50 min-h-screen">
@@ -72,7 +88,9 @@ export function UploadCheckTab() {
       <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">CSV UPLOAD & PROCESS</h1>
+          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">
+            CSV UPLOAD & PROCESS
+          </h1>
           <div className="w-24 h-2 bg-blue-600"></div>
         </div>
 
@@ -80,7 +98,9 @@ export function UploadCheckTab() {
         <div className="bg-blue-50 border-4 border-gray-900 p-8 shadow-[4px_4px_0px_0px_#1f2937] mb-8">
           <div className="flex items-center gap-3 mb-6">
             <Upload className="w-8 h-8 text-blue-600" />
-            <h2 className="text-2xl font-black text-gray-900 tracking-wide">UPLOAD CSV FILE</h2>
+            <h2 className="text-2xl font-black text-gray-900 tracking-wide">
+              UPLOAD CSV FILE
+            </h2>
           </div>
 
           {/* File Drop Zone */}
@@ -89,12 +109,21 @@ export function UploadCheckTab() {
             <div className="space-y-4">
               <Label htmlFor="csv-upload" className="cursor-pointer block">
                 <span className="text-2xl font-black text-gray-900 hover:text-gray-700 transition-colors">
-                  📁 DROP YOUR CSV FILE HERE OR CLICK TO BROWSE
+                  DROP YOUR CSV FILE HERE OR CLICK TO BROWSE
                 </span>
               </Label>
-              <Input id="csv-upload" type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+              <Input
+                id="csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
               <div className="bg-gray-100 border-2 border-gray-900 p-4 inline-block">
-                <p className="text-lg font-bold text-gray-900">📋 SUPPORTED FORMAT: CSV WITH PRODUCT DATA COLUMNS</p>
+                <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <FileTextIcon className="size-6" /> SUPPORTED FORMAT: CSV WITH
+                  PRODUCT DATA COLUMNS
+                </p>
               </div>
             </div>
           </div>
@@ -106,20 +135,23 @@ export function UploadCheckTab() {
                 <div className="flex items-center gap-4">
                   <CheckCircle className="w-8 h-8 text-green-700" />
                   <div>
-                    <p className="text-xl font-black text-gray-900">{uploadedFile.name}</p>
+                    <p className="text-xl font-black text-gray-900">
+                      {uploadedFile.name}
+                    </p>
                     <div className="flex items-center gap-3 mt-2">
-                      <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900">
-                        📊 {(uploadedFile.size / 1024).toFixed(1)} KB
+                      <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900 flex items-center gap-2">
+                        <TrendingDown className="size-6"/>{(uploadedFile.size / 1024).toFixed(1)} KB
                       </Badge>
-                      <Badge className="bg-blue-600 text-white font-bold border-2 border-gray-900">📄 CSV FILE</Badge>
+                      <Badge className="bg-blue-600 text-white font-bold border-2 border-gray-900 flex items-center gap-2">
+                        <FileTextIcon className="size-6"/> CSV FILE
+                      </Badge>
                     </div>
                   </div>
                 </div>
                 <Button
                   onClick={handleCSVProcess}
                   disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 text-white font-black text-xl py-4 px-8 border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] hover:shadow-[8px_8px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50"
-                >
+                  className="bg-green-600 hover:bg-green-700 text-white font-black text-xl py-4 px-8 border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] hover:shadow-[8px_8px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50">
                   {loading ? (
                     <>
                       <Loader2 className="w-6 h-6 mr-2 animate-spin" />
@@ -143,7 +175,9 @@ export function UploadCheckTab() {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-8 h-8 text-red-700" />
               <div>
-                <h3 className="text-xl font-black text-red-800 mb-2">❌ ERROR OCCURRED</h3>
+                <h3 className="text-xl font-black text-red-800 mb-2">
+                  ❌ ERROR OCCURRED
+                </h3>
                 <p className="text-lg font-bold text-red-700">{error}</p>
               </div>
             </div>
@@ -156,7 +190,9 @@ export function UploadCheckTab() {
             <div className="flex items-center gap-3">
               <CheckCircle className="w-8 h-8 text-green-700" />
               <div>
-                <h3 className="text-xl font-black text-green-800 mb-2">✅ SUCCESS!</h3>
+                <h3 className="text-xl font-black text-green-800 mb-2">
+                  ✅ SUCCESS!
+                </h3>
                 <p className="text-lg font-bold text-green-700">
                   Your CSV file has been processed and downloaded successfully!
                 </p>
@@ -167,29 +203,40 @@ export function UploadCheckTab() {
 
         {/* Instructions Section */}
         <div className="bg-purple-50 border-4 border-gray-900 p-8 shadow-[4px_4px_0px_0px_#1f2937]">
-          <h3 className="text-2xl font-black text-gray-900 mb-6 tracking-wide">📋 HOW IT WORKS</h3>
+          <h3 className="text-2xl font-black text-gray-900 mb-6 tracking-wide flex gap-2 items-center">
+            <NotebookIcon className="size-6" /> HOW IT WORKS
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white border-3 border-gray-900 p-6 shadow-[3px_3px_0px_0px_#1f2937]">
               <div className="text-3xl font-black text-purple-600 mb-3">1️⃣</div>
-              <h4 className="text-lg font-black text-gray-900 mb-2">UPLOAD CSV</h4>
+              <h4 className="text-lg font-black text-gray-900 mb-2">
+                UPLOAD CSV
+              </h4>
               <p className="text-sm font-bold text-gray-700">
-                Upload your CSV file containing product data with all required columns
+                Upload your CSV file containing product data with all required
+                columns
               </p>
             </div>
 
             <div className="bg-white border-3 border-gray-900 p-6 shadow-[3px_3px_0px_0px_#1f2937]">
               <div className="text-3xl font-black text-purple-600 mb-3">2️⃣</div>
-              <h4 className="text-lg font-black text-gray-900 mb-2">PROCESS DATA</h4>
+              <h4 className="text-lg font-black text-gray-900 mb-2">
+                PROCESS DATA
+              </h4>
               <p className="text-sm font-bold text-gray-700">
-                Our AI analyzes each product and generates predictions for all items
+                Our AI analyzes each product and generates predictions for all
+                items
               </p>
             </div>
 
             <div className="bg-white border-3 border-gray-900 p-6 shadow-[3px_3px_0px_0px_#1f2937]">
               <div className="text-3xl font-black text-purple-600 mb-3">3️⃣</div>
-              <h4 className="text-lg font-black text-gray-900 mb-2">DOWNLOAD RESULTS</h4>
+              <h4 className="text-lg font-black text-gray-900 mb-2">
+                DOWNLOAD RESULTS
+              </h4>
               <p className="text-sm font-bold text-gray-700">
-                Get your processed CSV with predictions, risk scores, and recommendations
+                Get your processed CSV with predictions, risk scores, and
+                recommendations
               </p>
             </div>
           </div>
@@ -197,11 +244,15 @@ export function UploadCheckTab() {
 
         {/* CSV Format Guide */}
         <div className="bg-amber-50 border-4 border-gray-900 p-8 shadow-[4px_4px_0px_0px_#1f2937] mt-8">
-          <h3 className="text-2xl font-black text-gray-900 mb-6 tracking-wide">📊 CSV FORMAT REQUIREMENTS</h3>
+          <h3 className="text-2xl font-black text-gray-900 mb-6 tracking-wide flex gap-2 items-center">
+            <BarChart2Icon className="size-6" /> CSV FORMAT REQUIREMENTS
+          </h3>
           <div className="bg-white border-3 border-gray-900 p-6 shadow-[3px_3px_0px_0px_#1f2937]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-lg font-black text-gray-900 mb-3">REQUIRED COLUMNS:</h4>
+                <h4 className="text-lg font-black text-gray-900 mb-3">
+                  REQUIRED COLUMNS:
+                </h4>
                 <ul className="space-y-2 text-sm font-bold text-gray-700">
                   <li>• SKU (Product identifier)</li>
                   <li>• Category (Product category)</li>
@@ -211,7 +262,9 @@ export function UploadCheckTab() {
                 </ul>
               </div>
               <div>
-                <h4 className="text-lg font-black text-gray-900 mb-3">OPTIONAL COLUMNS:</h4>
+                <h4 className="text-lg font-black text-gray-900 mb-3">
+                  OPTIONAL COLUMNS:
+                </h4>
                 <ul className="space-y-2 text-sm font-bold text-gray-700">
                   <li>• Average_Turnover_Time</li>
                   <li>• Overstock_Risk</li>
@@ -225,5 +278,5 @@ export function UploadCheckTab() {
         </div>
       </div>
     </div>
-  )
+  );
 }

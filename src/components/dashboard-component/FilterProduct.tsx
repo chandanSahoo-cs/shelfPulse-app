@@ -1,194 +1,236 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Loader2, Package, AlertTriangle, Leaf, Clock, TrendingDown, CheckCircle, XCircle } from "lucide-react"
+import { FaTag } from "react-icons/fa"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  Clock,
+  Leaf,
+  Loader2,
+  Package,
+  SearchIcon,
+  TrendingDown,
+  TrendingDownIcon,
+  XCircle,
+} from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 
 type Filters = {
-  expireMinThan?: number
-  expireMaxThan?: number
-  forecastMinThan?: number
-  forecastMaxThan?: number
-  suggestedMarkdownPercentMinThan?: number
-  suggestedMarkdownPercentMaxThan?: number
-  deadStock?: boolean
-  triggerMarkdown?: boolean
-  spoilageRisk?: "green" | "yellow" | "red"
-  sustainabilityLabel?: "green" | "yellow" | "red"
-}
+  expireMinThan?: number;
+  expireMaxThan?: number;
+  forecastMinThan?: number;
+  forecastMaxThan?: number;
+  suggestedMarkdownPercentMinThan?: number;
+  suggestedMarkdownPercentMaxThan?: number;
+  deadStock?: boolean;
+  triggerMarkdown?: boolean;
+  spoilageRisk?: "green" | "yellow" | "red";
+  sustainabilityLabel?: "green" | "yellow" | "red";
+};
 
 type ProductResult = {
   features: {
-    Average_Turnover_Time: number
-    Cold_Chain_Energy_Use: number
-    Compostability_Score: number
-    Days_Since_Last_Sale: number
-    Days_to_Expiry: number
-    Dead_Inventory_Flag: number
-    Embedded_Carbon_Footprint: number
-    Festival_Sales_Boost: number
-    Footprint_Factor: number
-    Forecasted_Demand: number
-    Historical_Sell_Through: number
-    Holiday_Demand_Amplifier: number
-    Markdown_History: number
-    Overstock_Risk: number
-    Promo_Effectiveness: number
-    Recyclability_Score: number
-    Recycled_Content_Pct: number
-    Redundancy_Index: number
-    Sensor_Anomalies: number
-    Shelf_Space_Efficiency: number
-    Spoilage_Risk_Score: number
-    Stockout_Risk: number
-    Take_Back_Eligible: number
-    Transport_Emissions: number
-    Upcoming_Local_Events: number
-    Waste_Risk_Index: number
-    category: string
-  }
+    Average_Turnover_Time: number;
+    Cold_Chain_Energy_Use: number;
+    Compostability_Score: number;
+    Days_Since_Last_Sale: number;
+    Days_to_Expiry: number;
+    Dead_Inventory_Flag: number;
+    Embedded_Carbon_Footprint: number;
+    Festival_Sales_Boost: number;
+    Footprint_Factor: number;
+    Forecasted_Demand: number;
+    Historical_Sell_Through: number;
+    Holiday_Demand_Amplifier: number;
+    Markdown_History: number;
+    Overstock_Risk: number;
+    Promo_Effectiveness: number;
+    Recyclability_Score: number;
+    Recycled_Content_Pct: number;
+    Redundancy_Index: number;
+    Sensor_Anomalies: number;
+    Shelf_Space_Efficiency: number;
+    Spoilage_Risk_Score: number;
+    Stockout_Risk: number;
+    Take_Back_Eligible: number;
+    Transport_Emissions: number;
+    Upcoming_Local_Events: number;
+    Waste_Risk_Index: number;
+    category: string;
+  };
   prediction: {
-    days_to_expiry_pred: number
-    dead_stock: boolean
-    forecasted_demand_pred: number
-    spoilage_risk: "Red" | "Yellow" | "Green"
-    suggested_markdown_percent: number
-    sustainability_label: "Red" | "Yellow" | "Green"
-    trigger_markdown: boolean
-  }
-  sku: string
-}
+    days_to_expiry_pred: number;
+    dead_stock: boolean;
+    forecasted_demand_pred: number;
+    spoilage_risk: "Red" | "Yellow" | "Green";
+    suggested_markdown_percent: number;
+    sustainability_label: "Red" | "Yellow" | "Green";
+    trigger_markdown: boolean;
+  };
+  sku: string;
+};
 
 export function FilterProductsTab() {
-  const [filters, setFilters] = useState<Filters>({})
-  const [results, setResults] = useState<ProductResult[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(10) // Show 10 items per page
+  const [filters, setFilters] = useState<Filters>({});
+  const [results, setResults] = useState<ProductResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Show 10 items per page
 
-  const handleNumberChange = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setFilters((prev) => ({
-      ...prev,
-      [key]: val ? Number.parseFloat(val) : undefined,
-    }))
-  }
+  const handleNumberChange =
+    (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setFilters((prev) => ({
+        ...prev,
+        [key]: val ? Number.parseFloat(val) : undefined,
+      }));
+    };
 
   const handleCheckedChange = (key: keyof Filters) => (checked: boolean) => {
     setFilters((prev) => ({
       ...prev,
       [key]: checked,
-    }))
-  }
+    }));
+  };
 
   const handleSelectChange = (key: keyof Filters) => (value: string) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value || undefined,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    const params = new URLSearchParams()
+    const params = new URLSearchParams();
 
     // Fix the parameter mapping
-    if (filters.expireMaxThan) params.append("days_to_expiry_pred_lt", filters.expireMaxThan.toString())
-    if (filters.expireMinThan) params.append("days_to_expiry_pred_gt", filters.expireMinThan.toString())
-    if (filters.forecastMaxThan) params.append("forecasted_demand_pred_lt", filters.forecastMaxThan.toString())
-    if (filters.forecastMinThan) params.append("forecasted_demand_pred_gt", filters.forecastMinThan.toString())
+    if (filters.expireMaxThan)
+      params.append("days_to_expiry_pred_lt", filters.expireMaxThan.toString());
+    if (filters.expireMinThan)
+      params.append("days_to_expiry_pred_gt", filters.expireMinThan.toString());
+    if (filters.forecastMaxThan)
+      params.append(
+        "forecasted_demand_pred_lt",
+        filters.forecastMaxThan.toString()
+      );
+    if (filters.forecastMinThan)
+      params.append(
+        "forecasted_demand_pred_gt",
+        filters.forecastMinThan.toString()
+      );
     if (filters.suggestedMarkdownPercentMaxThan)
-      params.append("suggested_markdown_percent_lt", filters.suggestedMarkdownPercentMaxThan.toString())
+      params.append(
+        "suggested_markdown_percent_lt",
+        filters.suggestedMarkdownPercentMaxThan.toString()
+      );
     if (filters.suggestedMarkdownPercentMinThan)
-      params.append("suggested_markdown_percent_gt", filters.suggestedMarkdownPercentMinThan.toString())
-    if (filters.deadStock) params.append("dead_stock", filters.deadStock.toString())
-    if (filters.triggerMarkdown) params.append("trigger_markdown", filters.triggerMarkdown.toString())
-    if (filters.spoilageRisk) params.append("spoilage_risk", filters.spoilageRisk)
-    if (filters.sustainabilityLabel) params.append("sustainability_label", filters.sustainabilityLabel)
+      params.append(
+        "suggested_markdown_percent_gt",
+        filters.suggestedMarkdownPercentMinThan.toString()
+      );
+    if (filters.deadStock)
+      params.append("dead_stock", filters.deadStock.toString());
+    if (filters.triggerMarkdown)
+      params.append("trigger_markdown", filters.triggerMarkdown.toString());
+    if (filters.spoilageRisk)
+      params.append("spoilage_risk", filters.spoilageRisk);
+    if (filters.sustainabilityLabel)
+      params.append("sustainability_label", filters.sustainabilityLabel);
 
-    const url = `https://shelfpulse.onrender.com/api/v1/products?${params.toString()}`
+    const url = `https://shelfpulse.onrender.com/api/v1/products?${params.toString()}`;
 
     try {
-      console.log(url)
-      const res = await fetch(url)
+      console.log(url);
+      const res = await fetch(url);
       if (!res.ok) {
-        console.log("Failed to fetch data")
-        setResults([])
+        console.log("Failed to fetch data");
+        setResults([]);
       } else {
-        const result = await res.json()
-        console.log(result)
-        setResults(result)
+        const result = await res.json();
+        console.log(result);
+        setResults(result);
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      setResults([])
+      console.error("Error fetching data:", error);
+      setResults([]);
     } finally {
-      setIsLoading(false)
-      setHasSearched(true)
-      setCurrentPage(1)
+      setIsLoading(false);
+      setHasSearched(true);
+      setCurrentPage(1);
     }
-  }
+  };
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
       case "green":
-        return "bg-green-600"
+        return "bg-green-600";
       case "yellow":
-        return "bg-amber-500"
+        return "bg-amber-500";
       case "red":
-        return "bg-red-600"
+        return "bg-red-600";
       default:
-        return "bg-gray-500"
+        return "bg-gray-500";
     }
-  }
+  };
 
   const getRiskIcon = (risk: string) => {
     switch (risk.toLowerCase()) {
       case "green":
-        return <CheckCircle className="w-4 h-4" />
+        return <CheckCircle className="w-4 h-4" />;
       case "yellow":
-        return <AlertTriangle className="w-4 h-4" />
+        return <AlertTriangle className="w-4 h-4" />;
       case "red":
-        return <XCircle className="w-4 h-4" />
+        return <XCircle className="w-4 h-4" />;
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   // Pagination calculations
-  const totalPages = Math.ceil(results.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentResults = results.slice(startIndex, endIndex)
+  const totalPages = Math.ceil(results.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentResults = results.slice(startIndex, endIndex);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setCurrentPage(page);
     // Scroll to top of results
-    document.getElementById("results-section")?.scrollIntoView({ behavior: "smooth" })
-  }
+    document
+      .getElementById("results-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      handlePageChange(currentPage - 1)
+      handlePageChange(currentPage - 1);
     }
-  }
+  };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      handlePageChange(currentPage + 1)
+      handlePageChange(currentPage + 1);
     }
-  }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-8 bg-gray-50 min-h-screen">
@@ -196,13 +238,17 @@ export function FilterProductsTab() {
       <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8 mb-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">PRODUCT FILTERS</h1>
+          <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">
+            PRODUCT FILTERS
+          </h1>
           <div className="w-24 h-2 bg-blue-600"></div>
         </div>
 
         {/* Filter Selection */}
         <div className="bg-gray-100 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937] mb-8">
-          <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">SELECT FILTERS TO USE</Label>
+          <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+            SELECT FILTERS TO USE
+          </Label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { key: "expire", label: "Days to Expire" },
@@ -217,17 +263,19 @@ export function FilterProductsTab() {
                   id={filter.key}
                   checked={activeFilters.has(filter.key)}
                   onCheckedChange={(checked) => {
-                    const newFilters = new Set(activeFilters)
+                    const newFilters = new Set(activeFilters);
                     if (checked) {
-                      newFilters.add(filter.key)
+                      newFilters.add(filter.key);
                     } else {
-                      newFilters.delete(filter.key)
+                      newFilters.delete(filter.key);
                     }
-                    setActiveFilters(newFilters)
+                    setActiveFilters(newFilters);
                   }}
                   className="w-5 h-5 border-3 border-gray-900 data-[state=checked]:bg-gray-900 data-[state=checked]:text-white shadow-[2px_2px_0px_0px_#1f2937]"
                 />
-                <Label htmlFor={filter.key} className="text-sm font-bold text-gray-900 cursor-pointer">
+                <Label
+                  htmlFor={filter.key}
+                  className="text-sm font-bold text-gray-900 cursor-pointer">
                   {filter.label}
                 </Label>
               </div>
@@ -239,10 +287,14 @@ export function FilterProductsTab() {
           {/* Days to Expire Section */}
           {activeFilters.has("expire") && (
             <div className="bg-blue-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937]">
-              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">DAYS TO EXPIRE</Label>
+              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+                DAYS TO EXPIRE
+              </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MIN</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MIN
+                  </Label>
                   <Input
                     type="number"
                     placeholder="0"
@@ -252,7 +304,9 @@ export function FilterProductsTab() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MAX</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MAX
+                  </Label>
                   <Input
                     type="number"
                     placeholder="999"
@@ -268,10 +322,14 @@ export function FilterProductsTab() {
           {/* Forecasted Demand Section */}
           {activeFilters.has("forecast") && (
             <div className="bg-indigo-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937]">
-              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">FORECASTED DEMAND</Label>
+              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+                FORECASTED DEMAND
+              </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MIN</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MIN
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -282,7 +340,9 @@ export function FilterProductsTab() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MAX</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MAX
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -299,27 +359,37 @@ export function FilterProductsTab() {
           {/* Suggested Markdown Percent Section */}
           {activeFilters.has("markdown") && (
             <div className="bg-green-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937]">
-              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">SUGGESTED MARKDOWN %</Label>
+              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+                SUGGESTED MARKDOWN %
+              </Label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MIN</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MIN
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
                     placeholder="0.00"
                     value={filters.suggestedMarkdownPercentMinThan ?? ""}
-                    onChange={handleNumberChange("suggestedMarkdownPercentMinThan")}
+                    onChange={handleNumberChange(
+                      "suggestedMarkdownPercentMinThan"
+                    )}
                     className="border-4 border-gray-900 bg-white text-gray-900 font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#1f2937] focus:shadow-[6px_6px_0px_0px_#1f2937] transition-all"
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">MAX</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    MAX
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
                     placeholder="100.00"
                     value={filters.suggestedMarkdownPercentMaxThan ?? ""}
-                    onChange={handleNumberChange("suggestedMarkdownPercentMaxThan")}
+                    onChange={handleNumberChange(
+                      "suggestedMarkdownPercentMaxThan"
+                    )}
                     className="border-4 border-gray-900 bg-white text-gray-900 font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#1f2937] focus:shadow-[6px_6px_0px_0px_#1f2937] transition-all"
                   />
                 </div>
@@ -330,7 +400,9 @@ export function FilterProductsTab() {
           {/* Checkboxes Section */}
           {activeFilters.has("stock") && (
             <div className="bg-amber-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937]">
-              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">STOCK STATUS</Label>
+              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+                STOCK STATUS
+              </Label>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <Checkbox
@@ -339,7 +411,9 @@ export function FilterProductsTab() {
                     onCheckedChange={handleCheckedChange("deadStock")}
                     className="w-6 h-6 border-4 border-gray-900 data-[state=checked]:bg-gray-900 data-[state=checked]:text-white shadow-[3px_3px_0px_0px_#1f2937]"
                   />
-                  <Label htmlFor="deadStock" className="text-lg font-bold text-gray-900 cursor-pointer">
+                  <Label
+                    htmlFor="deadStock"
+                    className="text-lg font-bold text-gray-900 cursor-pointer">
                     DEAD STOCK
                   </Label>
                 </div>
@@ -351,7 +425,9 @@ export function FilterProductsTab() {
                     onCheckedChange={handleCheckedChange("triggerMarkdown")}
                     className="w-6 h-6 border-4 border-gray-900 data-[state=checked]:bg-gray-900 data-[state=checked]:text-white shadow-[3px_3px_0px_0px_#1f2937]"
                   />
-                  <Label htmlFor="triggerMarkdown" className="text-lg font-bold text-gray-900 cursor-pointer">
+                  <Label
+                    htmlFor="triggerMarkdown"
+                    className="text-lg font-bold text-gray-900 cursor-pointer">
                     TRIGGER MARKDOWN
                   </Label>
                 </div>
@@ -360,48 +436,98 @@ export function FilterProductsTab() {
           )}
 
           {/* Dropdowns Section */}
-          {activeFilters.has("spoilage") || activeFilters.has("sustainability") ? (
+          {activeFilters.has("spoilage") ||
+          activeFilters.has("sustainability") ? (
             <div className="bg-purple-50 border-4 border-gray-900 p-6 shadow-[4px_4px_0px_0px_#1f2937]">
-              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">RISK ASSESSMENT</Label>
+              <Label className="text-xl font-black text-gray-900 mb-4 block tracking-wide">
+                RISK ASSESSMENT
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">SPOILAGE RISK</Label>
-                  <Select value={filters.spoilageRisk ?? ""} onValueChange={handleSelectChange("spoilageRisk")}>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    SPOILAGE RISK
+                  </Label>
+                  <Select
+                    value={filters.spoilageRisk ?? ""}
+                    onValueChange={handleSelectChange("spoilageRisk")}>
                     <SelectTrigger className="w-full border-4 border-gray-900 bg-white text-gray-900 font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#1f2937] focus:shadow-[6px_6px_0px_0px_#1f2937]">
                       <SelectValue placeholder="-- SELECT --" />
                     </SelectTrigger>
                     <SelectContent className="border-4 border-gray-900 bg-white">
-                      <SelectItem value="green" className="font-bold text-green-700">
-                        🟢 GREEN
+                      <SelectItem
+                        value="green"
+                        className="font-bold text-green-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#00c950"
+                          stroke="#000000"
+                        />{" "}
+                        GREEN
                       </SelectItem>
-                      <SelectItem value="yellow" className="font-bold text-amber-700">
-                        🟡 YELLOW
+                      <SelectItem
+                        value="yellow"
+                        className="font-bold text-amber-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#f0b100"
+                          stroke="#000000"
+                        />{" "}
+                        YELLOW
                       </SelectItem>
-                      <SelectItem value="red" className="font-bold text-red-700">
-                        🔴 RED
+                      <SelectItem
+                        value="red"
+                        className="font-bold text-red-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#fb2c36"
+                          stroke="#000000"
+                        />{" "}
+                        RED
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-bold text-gray-900 mb-2 block">SUSTAINABILITY LABEL</Label>
+                  <Label className="text-sm font-bold text-gray-900 mb-2 block">
+                    SUSTAINABILITY LABEL
+                  </Label>
                   <Select
                     value={filters.sustainabilityLabel ?? ""}
-                    onValueChange={handleSelectChange("sustainabilityLabel")}
-                  >
+                    onValueChange={handleSelectChange("sustainabilityLabel")}>
                     <SelectTrigger className="w-full border-4 border-gray-900 bg-white text-gray-900 font-bold text-lg h-12 shadow-[4px_4px_0px_0px_#1f2937] focus:shadow-[6px_6px_0px_0px_#1f2937]">
                       <SelectValue placeholder="-- SELECT --" />
                     </SelectTrigger>
                     <SelectContent className="border-4 border-gray-900 bg-white">
-                      <SelectItem value="green" className="font-bold text-green-700">
-                        🟢 GREEN
+                      <SelectItem
+                        value="green"
+                        className="font-bold text-green-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#00c950"
+                          stroke="#000000"
+                        />{" "}
+                        GREEN
                       </SelectItem>
-                      <SelectItem value="yellow" className="font-bold text-amber-700">
-                        🟡 YELLOW
+                      <SelectItem
+                        value="yellow"
+                        className="font-bold text-amber-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#f0b100"
+                          stroke="#000000"
+                        />{" "}
+                        YELLOW
                       </SelectItem>
-                      <SelectItem value="red" className="font-bold text-red-700">
-                        🔴 RED
+                      <SelectItem
+                        value="red"
+                        className="font-bold text-red-500 flex gap-2">
+                        <Circle
+                          className="size-6"
+                          fill="#fb2c36"
+                          stroke="#000000"
+                        />{" "}
+                        RED
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -415,15 +541,14 @@ export function FilterProductsTab() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-6 px-8 border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] hover:shadow-[10px_10px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50"
-            >
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-6 px-8 border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] hover:shadow-[10px_10px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50">
               {isLoading ? (
                 <>
                   <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                   SEARCHING...
                 </>
               ) : (
-                <>🔍 FILTER PRODUCTS</>
+                <><SearchIcon className="size-6"/> FILTER PRODUCTS</>
               )}
             </Button>
           </div>
@@ -432,16 +557,22 @@ export function FilterProductsTab() {
 
       {/* Results Section */}
       {hasSearched && (
-        <div id="results-section" className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
+        <div
+          id="results-section"
+          className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
           <div className="mb-6">
-            <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">SEARCH RESULTS ({results.length})</h2>
+            <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">
+              SEARCH RESULTS ({results.length})
+            </h2>
             <div className="w-20 h-2 bg-blue-600"></div>
           </div>
 
           {results.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <p className="text-xl font-bold text-gray-600">No products found matching your criteria</p>
+              <p className="text-xl font-bold text-gray-600">
+                No products found matching your criteria
+              </p>
             </div>
           ) : (
             <>
@@ -449,7 +580,9 @@ export function FilterProductsTab() {
               <div className="flex justify-between items-center mb-6">
                 <div className="bg-blue-50 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
                   <p className="text-lg font-black text-gray-900">
-                    📊 SHOWING {startIndex + 1}-{Math.min(endIndex, results.length)} OF {results.length} PRODUCTS
+                    📊 SHOWING {startIndex + 1}-
+                    {Math.min(endIndex, results.length)} OF {results.length}{" "}
+                    PRODUCTS
                   </p>
                   <p className="text-sm font-bold text-gray-600">
                     PAGE {currentPage} OF {totalPages}
@@ -458,7 +591,9 @@ export function FilterProductsTab() {
 
                 {/* Items per page info */}
                 <div className="bg-gray-100 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
-                  <p className="text-sm font-bold text-gray-900">{itemsPerPage} ITEMS PER PAGE</p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {itemsPerPage} ITEMS PER PAGE
+                  </p>
                 </div>
               </div>
 
@@ -467,19 +602,22 @@ export function FilterProductsTab() {
                 {currentResults.map((product, index) => (
                   <Card
                     key={product.sku}
-                    className="border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] bg-gradient-to-r from-blue-50 to-indigo-50"
-                  >
+                    className="border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] bg-gradient-to-r from-blue-50 to-indigo-50">
                     <CardHeader className="border-b-4 border-gray-900 bg-white">
                       <CardTitle className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Package className="w-6 h-6 text-blue-600" />
-                          <span className="text-2xl font-black text-gray-900">{product.sku}</span>
+                          <span className="text-2xl font-black text-gray-900">
+                            {product.sku}
+                          </span>
                           <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900">
                             {product.features.category.toUpperCase()}
                           </Badge>
                         </div>
                         <div className="bg-gray-100 border-2 border-gray-900 px-3 py-1">
-                          <span className="text-sm font-bold text-gray-900">#{startIndex + index + 1}</span>
+                          <span className="text-sm font-bold text-gray-900">
+                            #{startIndex + index + 1}
+                          </span>
                         </div>
                       </CardTitle>
                     </CardHeader>
@@ -489,7 +627,9 @@ export function FilterProductsTab() {
                         <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
                           <div className="flex items-center gap-2 mb-2">
                             <Clock className="w-4 h-4 text-red-600" />
-                            <span className="font-bold text-sm text-gray-900">EXPIRES IN</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              EXPIRES IN
+                            </span>
                           </div>
                           <div className="text-2xl font-black text-red-600">
                             {product.prediction.days_to_expiry_pred} DAYS
@@ -499,21 +639,28 @@ export function FilterProductsTab() {
                         <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
                           <div className="flex items-center gap-2 mb-2">
                             <TrendingDown className="w-4 h-4 text-blue-600" />
-                            <span className="font-bold text-sm text-gray-900">DEMAND</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              DEMAND
+                            </span>
                           </div>
                           <div className="text-2xl font-black text-blue-600">
-                            {product.prediction.forecasted_demand_pred.toFixed(2)}
+                            {product.prediction.forecasted_demand_pred.toFixed(
+                              2
+                            )}
                           </div>
                         </div>
 
                         <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
                           <div className="flex items-center gap-2 mb-2">
                             <AlertTriangle className="w-4 h-4 text-amber-600" />
-                            <span className="font-bold text-sm text-gray-900">SPOILAGE</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              SPOILAGE
+                            </span>
                           </div>
                           <div
-                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.spoilage_risk)}`}
-                          >
+                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(
+                              product.prediction.spoilage_risk
+                            )}`}>
                             {getRiskIcon(product.prediction.spoilage_risk)}
                             {product.prediction.spoilage_risk.toUpperCase()}
                           </div>
@@ -522,12 +669,17 @@ export function FilterProductsTab() {
                         <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
                           <div className="flex items-center gap-2 mb-2">
                             <Leaf className="w-4 h-4 text-green-600" />
-                            <span className="font-bold text-sm text-gray-900">SUSTAINABILITY</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              SUSTAINABILITY
+                            </span>
                           </div>
                           <div
-                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.sustainability_label)}`}
-                          >
-                            {getRiskIcon(product.prediction.sustainability_label)}
+                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(
+                              product.prediction.sustainability_label
+                            )}`}>
+                            {getRiskIcon(
+                              product.prediction.sustainability_label
+                            )}
                             {product.prediction.sustainability_label.toUpperCase()}
                           </div>
                         </div>
@@ -536,18 +688,19 @@ export function FilterProductsTab() {
                       {/* Status Badges */}
                       <div className="flex gap-3 mb-4">
                         {product.prediction.dead_stock && (
-                          <Badge className="bg-red-600 text-white font-bold border-2 border-gray-900">
-                            💀 DEAD STOCK
+                          <Badge className="bg-red-600 text-white font-bold border-2 border-gray-900 flex gap-2">
+                            <AlertTriangle className="size-6"/> DEAD STOCK
                           </Badge>
                         )}
                         {product.prediction.trigger_markdown && (
-                          <Badge className="bg-amber-500 text-white font-bold border-2 border-gray-900">
-                            🏷️ MARKDOWN TRIGGER
+                          <Badge className="bg-amber-500 text-white font-bold border-2 border-gray-900 flex gap-2">
+                            <FaTag className="size-6"/> MARKDOWN TRIGGER
                           </Badge>
                         )}
                         {product.prediction.suggested_markdown_percent > 0 && (
-                          <Badge className="bg-yellow-500 text-gray-900 font-bold border-2 border-gray-900">
-                            📉 {product.prediction.suggested_markdown_percent}% MARKDOWN
+                          <Badge className="bg-yellow-500 text-gray-900 font-bold border-2 border-gray-900 flex gap-2">
+                            <TrendingDownIcon className="size-6"/> {product.prediction.suggested_markdown_percent}%
+                            MARKDOWN
                           </Badge>
                         )}
                       </div>
@@ -555,15 +708,22 @@ export function FilterProductsTab() {
                       {/* Key Features */}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                         <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                          <span className="font-bold text-gray-900">Turnover:</span>{" "}
-                          {product.features.Average_Turnover_Time.toFixed(1)} days
+                          <span className="font-bold text-gray-900">
+                            Turnover:
+                          </span>{" "}
+                          {product.features.Average_Turnover_Time.toFixed(1)}{" "}
+                          days
                         </div>
                         <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                          <span className="font-bold text-gray-900">Last Sale:</span>{" "}
+                          <span className="font-bold text-gray-900">
+                            Last Sale:
+                          </span>{" "}
                           {product.features.Days_Since_Last_Sale} days ago
                         </div>
                         <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                          <span className="font-bold text-gray-900">Overstock Risk:</span>{" "}
+                          <span className="font-bold text-gray-900">
+                            Overstock Risk:
+                          </span>{" "}
                           {(product.features.Overstock_Risk * 100).toFixed(1)}%
                         </div>
                       </div>
@@ -580,58 +740,68 @@ export function FilterProductsTab() {
                     <Button
                       onClick={handlePreviousPage}
                       disabled={currentPage === 1}
-                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]"
-                    >
+                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]">
                       ← PREVIOUS
                     </Button>
 
                     {/* Page Numbers */}
                     <div className="flex items-center gap-2">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                        // Show first page, last page, current page, and pages around current
-                        const showPage =
-                          page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const showPage =
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 &&
+                              page <= currentPage + 1);
 
-                        if (!showPage && page === 2 && currentPage > 4) {
+                          if (!showPage && page === 2 && currentPage > 4) {
+                            return (
+                              <span
+                                key={page}
+                                className="text-gray-500 font-bold">
+                                ...
+                              </span>
+                            );
+                          }
+
+                          if (
+                            !showPage &&
+                            page === totalPages - 1 &&
+                            currentPage < totalPages - 3
+                          ) {
+                            return (
+                              <span
+                                key={page}
+                                className="text-gray-500 font-bold">
+                                ...
+                              </span>
+                            );
+                          }
+
+                          if (!showPage) return null;
+
                           return (
-                            <span key={page} className="text-gray-500 font-bold">
-                              ...
-                            </span>
-                          )
+                            <Button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`font-black text-lg py-2 px-4 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
+                                currentPage === page
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-white text-gray-900 hover:bg-blue-50"
+                              }`}>
+                              {page}
+                            </Button>
+                          );
                         }
-
-                        if (!showPage && page === totalPages - 1 && currentPage < totalPages - 3) {
-                          return (
-                            <span key={page} className="text-gray-500 font-bold">
-                              ...
-                            </span>
-                          )
-                        }
-
-                        if (!showPage) return null
-
-                        return (
-                          <Button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`font-black text-lg py-2 px-4 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
-                              currentPage === page
-                                ? "bg-blue-600 text-white"
-                                : "bg-white text-gray-900 hover:bg-blue-50"
-                            }`}
-                          >
-                            {page}
-                          </Button>
-                        )
-                      })}
+                      )}
                     </div>
 
                     {/* Next Button */}
                     <Button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]"
-                    >
+                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]">
                       NEXT →
                     </Button>
                   </div>
@@ -640,7 +810,8 @@ export function FilterProductsTab() {
                   <div className="mt-4 text-center">
                     <div className="bg-gray-100 border-3 border-gray-900 p-3 shadow-[3px_3px_0px_0px_#1f2937] inline-block">
                       <p className="text-sm font-bold text-gray-900">
-                        📄 PAGE {currentPage} OF {totalPages} • {results.length} TOTAL RESULTS
+                        📄 PAGE {currentPage} OF {totalPages} • {results.length}{" "}
+                        TOTAL RESULTS
                       </p>
                     </div>
                   </div>
@@ -651,5 +822,5 @@ export function FilterProductsTab() {
         </div>
       )}
     </div>
-  )
+  );
 }
