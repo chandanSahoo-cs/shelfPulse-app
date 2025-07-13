@@ -120,7 +120,7 @@ const generateMarkdownFlow = (product: Product): FlowGraph => {
       label: (
         <div className="flex gap-2 items-center">
           <ClockAlertIcon className="size-6" />
-          <span>HIGH SPOILAGE</span>
+          <span>EXPIRY</span>
         </div>
       ),
       condition: prediction.days_to_expiry_pred < 5,
@@ -131,7 +131,8 @@ const generateMarkdownFlow = (product: Product): FlowGraph => {
       label: (
         <div className="flex gap-2 items-center">
           <Trash2Icon className="size-6" />
-          <span>HIGH SPOILAGE</span>
+          <span>HIGH WASTE RISK
+          </span>
         </div>
       ),
       condition: features.Waste_Risk_Index > 0.7,
