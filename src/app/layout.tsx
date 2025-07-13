@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ShelfPulse",
   description: "ShelfPulse is an AI-driven system that intelligently segregates inventory based on usability and demand to reduce retail waste and promote sustainability",
+  icons :{
+    icon :"./logo.svg"
+  }
 };
 
 export default function RootLayout({

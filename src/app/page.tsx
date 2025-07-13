@@ -21,6 +21,7 @@ import {
   Zap,
   ZapIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function ShelfPulseDashboard() {
   return (
@@ -30,12 +31,12 @@ export default function ShelfPulseDashboard() {
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <div className="bg-blue-600 border-4 border-gray-900 p-4 shadow-[4px_4px_0px_0px_#1f2937] transform rotate-2">
-                <Zap className="w-10 h-10 text-white" />
+              <div className="bg-green-600 border-4 border-gray-900 p-2 shadow-[4px_4px_0px_0px_#1f2937] transform rotate-2">
+                <Image alt="logo" width={60} height={60} src="/transparent.svg" />
               </div>
               <div>
                 <h1 className="text-5xl font-black text-gray-900 tracking-tight transform -skew-x-3">
-                  SHELF<span className="text-blue-600">PULSE</span>
+                  SHELF<span className="text-green-600">PULSE</span>
                 </h1>
                 <p className="text-lg font-bold text-gray-600 mt-1 tracking-wide flex items-center gap-2">
                   <FaBoxOpen className="size-6 " /> INTELLIGENT PRODUCT
@@ -95,28 +96,28 @@ export default function ShelfPulseDashboard() {
               <TabsList className="grid w-full grid-cols-4 bg-transparent gap-4 h-auto p-0">
                 <TabsTrigger
                   value="filter"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
+                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
                   <Filter className="w-5 h-5 mr-2" />
                   FILTER
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="detail"
-                  className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
                   <Package className="w-5 h-5 mr-2" />
                   DETAIL
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="upload"
-                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
                   <Upload className="w-5 h-5 mr-2" />
                   UPLOAD
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="dashboard"
-                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
+                  className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-[4px_4px_0px_0px_#1f2937] bg-white text-gray-900 font-black text-lg py-4 px-6 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1">
                   <BarChart3 className="w-5 h-5 mr-2" />
                   DASHBOARD
                 </TabsTrigger>

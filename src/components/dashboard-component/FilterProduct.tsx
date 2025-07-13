@@ -541,7 +541,7 @@ export function FilterProductsTab() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-6 px-8 border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] hover:shadow-[10px_10px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50">
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-black text-2xl py-6 px-8 border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] hover:shadow-[10px_10px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 tracking-wider disabled:opacity-50">
               {isLoading ? (
                 <>
                   <Loader2 className="w-6 h-6 mr-2 animate-spin" />
