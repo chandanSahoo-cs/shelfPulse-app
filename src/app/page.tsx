@@ -34,7 +34,7 @@ export default function ShelfPulseDashboard() {
                 <div className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-600" />
                   <div>
-                    <div className="text-xl font-black text-gray-900">99.9%</div>
+                    <div className="text-xl font-black text-gray-900">90%</div>
                     <div className="text-xs font-bold text-gray-600">ACCURACY</div>
                   </div>
                 </div>

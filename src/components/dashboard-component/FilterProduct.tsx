@@ -72,6 +72,8 @@ export function FilterProductsTab() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10) // Show 10 items per page
 
   const handleNumberChange = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -134,6 +136,7 @@ export function FilterProductsTab() {
     } finally {
       setIsLoading(false)
       setHasSearched(true)
+      setCurrentPage(1)
     }
   }
 
@@ -160,6 +163,30 @@ export function FilterProductsTab() {
         return <XCircle className="w-4 h-4" />
       default:
         return null
+    }
+  }
+
+  // Pagination calculations
+  const totalPages = Math.ceil(results.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentResults = results.slice(startIndex, endIndex)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top of results
+    document.getElementById("results-section")?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1)
     }
   }
 
@@ -405,7 +432,7 @@ export function FilterProductsTab() {
 
       {/* Results Section */}
       {hasSearched && (
-        <div className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
+        <div id="results-section" className="bg-white border-4 border-gray-900 shadow-[8px_8px_0px_0px_#1f2937] p-8">
           <div className="mb-6">
             <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">SEARCH RESULTS ({results.length})</h2>
             <div className="w-20 h-2 bg-blue-600"></div>
@@ -417,111 +444,209 @@ export function FilterProductsTab() {
               <p className="text-xl font-bold text-gray-600">No products found matching your criteria</p>
             </div>
           ) : (
-            <div className="grid gap-6">
-              {results.map((product, index) => (
-                <Card
-                  key={product.sku}
-                  className="border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] bg-gradient-to-r from-blue-50 to-indigo-50"
-                >
-                  <CardHeader className="border-b-4 border-gray-900 bg-white">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Package className="w-6 h-6 text-blue-600" />
-                        <span className="text-2xl font-black text-gray-900">{product.sku}</span>
-                        <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900">
-                          {product.features.category.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    {/* Predictions Row */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Clock className="w-4 h-4 text-red-600" />
-                          <span className="font-bold text-sm text-gray-900">EXPIRES IN</span>
+            <>
+              {/* Results Header with Pagination Info */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="bg-blue-50 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                  <p className="text-lg font-black text-gray-900">
+                    📊 SHOWING {startIndex + 1}-{Math.min(endIndex, results.length)} OF {results.length} PRODUCTS
+                  </p>
+                  <p className="text-sm font-bold text-gray-600">
+                    PAGE {currentPage} OF {totalPages}
+                  </p>
+                </div>
+
+                {/* Items per page info */}
+                <div className="bg-gray-100 border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                  <p className="text-sm font-bold text-gray-900">{itemsPerPage} ITEMS PER PAGE</p>
+                </div>
+              </div>
+
+              {/* Results Grid */}
+              <div className="grid gap-6 mb-8">
+                {currentResults.map((product, index) => (
+                  <Card
+                    key={product.sku}
+                    className="border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] bg-gradient-to-r from-blue-50 to-indigo-50"
+                  >
+                    <CardHeader className="border-b-4 border-gray-900 bg-white">
+                      <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Package className="w-6 h-6 text-blue-600" />
+                          <span className="text-2xl font-black text-gray-900">{product.sku}</span>
+                          <Badge className="bg-gray-900 text-white font-bold border-2 border-gray-900">
+                            {product.features.category.toUpperCase()}
+                          </Badge>
                         </div>
-                        <div className="text-2xl font-black text-red-600">
-                          {product.prediction.days_to_expiry_pred} DAYS
+                        <div className="bg-gray-100 border-2 border-gray-900 px-3 py-1">
+                          <span className="text-sm font-bold text-gray-900">#{startIndex + index + 1}</span>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      {/* Predictions Row */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-4 h-4 text-red-600" />
+                            <span className="font-bold text-sm text-gray-900">EXPIRES IN</span>
+                          </div>
+                          <div className="text-2xl font-black text-red-600">
+                            {product.prediction.days_to_expiry_pred} DAYS
+                          </div>
+                        </div>
+
+                        <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingDown className="w-4 h-4 text-blue-600" />
+                            <span className="font-bold text-sm text-gray-900">DEMAND</span>
+                          </div>
+                          <div className="text-2xl font-black text-blue-600">
+                            {product.prediction.forecasted_demand_pred.toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                            <span className="font-bold text-sm text-gray-900">SPOILAGE</span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.spoilage_risk)}`}
+                          >
+                            {getRiskIcon(product.prediction.spoilage_risk)}
+                            {product.prediction.spoilage_risk.toUpperCase()}
+                          </div>
+                        </div>
+
+                        <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Leaf className="w-4 h-4 text-green-600" />
+                            <span className="font-bold text-sm text-gray-900">SUSTAINABILITY</span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.sustainability_label)}`}
+                          >
+                            {getRiskIcon(product.prediction.sustainability_label)}
+                            {product.prediction.sustainability_label.toUpperCase()}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <TrendingDown className="w-4 h-4 text-blue-600" />
-                          <span className="font-bold text-sm text-gray-900">DEMAND</span>
-                        </div>
-                        <div className="text-2xl font-black text-blue-600">
-                          {product.prediction.forecasted_demand_pred.toFixed(2)}
-                        </div>
+                      {/* Status Badges */}
+                      <div className="flex gap-3 mb-4">
+                        {product.prediction.dead_stock && (
+                          <Badge className="bg-red-600 text-white font-bold border-2 border-gray-900">
+                            💀 DEAD STOCK
+                          </Badge>
+                        )}
+                        {product.prediction.trigger_markdown && (
+                          <Badge className="bg-amber-500 text-white font-bold border-2 border-gray-900">
+                            🏷️ MARKDOWN TRIGGER
+                          </Badge>
+                        )}
+                        {product.prediction.suggested_markdown_percent > 0 && (
+                          <Badge className="bg-yellow-500 text-gray-900 font-bold border-2 border-gray-900">
+                            📉 {product.prediction.suggested_markdown_percent}% MARKDOWN
+                          </Badge>
+                        )}
                       </div>
 
-                      <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-600" />
-                          <span className="font-bold text-sm text-gray-900">SPOILAGE</span>
+                      {/* Key Features */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div className="bg-gray-100 border-2 border-gray-900 p-2">
+                          <span className="font-bold text-gray-900">Turnover:</span>{" "}
+                          {product.features.Average_Turnover_Time.toFixed(1)} days
                         </div>
-                        <div
-                          className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.spoilage_risk)}`}
-                        >
-                          {getRiskIcon(product.prediction.spoilage_risk)}
-                          {product.prediction.spoilage_risk.toUpperCase()}
+                        <div className="bg-gray-100 border-2 border-gray-900 p-2">
+                          <span className="font-bold text-gray-900">Last Sale:</span>{" "}
+                          {product.features.Days_Since_Last_Sale} days ago
+                        </div>
+                        <div className="bg-gray-100 border-2 border-gray-900 p-2">
+                          <span className="font-bold text-gray-900">Overstock Risk:</span>{" "}
+                          {(product.features.Overstock_Risk * 100).toFixed(1)}%
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-                      <div className="bg-white border-3 border-gray-900 p-4 shadow-[3px_3px_0px_0px_#1f2937]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Leaf className="w-4 h-4 text-green-600" />
-                          <span className="font-bold text-sm text-gray-900">SUSTAINABILITY</span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 text-white font-black px-2 py-1 ${getRiskColor(product.prediction.sustainability_label)}`}
-                        >
-                          {getRiskIcon(product.prediction.sustainability_label)}
-                          {product.prediction.sustainability_label.toUpperCase()}
-                        </div>
-                      </div>
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="bg-white border-4 border-gray-900 shadow-[6px_6px_0px_0px_#1f2937] p-6">
+                  <div className="flex items-center justify-between">
+                    {/* Previous Button */}
+                    <Button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]"
+                    >
+                      ← PREVIOUS
+                    </Button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage =
+                          page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)
+
+                        if (!showPage && page === 2 && currentPage > 4) {
+                          return (
+                            <span key={page} className="text-gray-500 font-bold">
+                              ...
+                            </span>
+                          )
+                        }
+
+                        if (!showPage && page === totalPages - 1 && currentPage < totalPages - 3) {
+                          return (
+                            <span key={page} className="text-gray-500 font-bold">
+                              ...
+                            </span>
+                          )
+                        }
+
+                        if (!showPage) return null
+
+                        return (
+                          <Button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`font-black text-lg py-2 px-4 border-4 border-gray-900 shadow-[3px_3px_0px_0px_#1f2937] hover:shadow-[4px_4px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 ${
+                              currentPage === page
+                                ? "bg-blue-600 text-white"
+                                : "bg-white text-gray-900 hover:bg-blue-50"
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        )
+                      })}
                     </div>
 
-                    {/* Status Badges */}
-                    <div className="flex gap-3 mb-4">
-                      {product.prediction.dead_stock && (
-                        <Badge className="bg-red-600 text-white font-bold border-2 border-gray-900">
-                          💀 DEAD STOCK
-                        </Badge>
-                      )}
-                      {product.prediction.trigger_markdown && (
-                        <Badge className="bg-amber-500 text-white font-bold border-2 border-gray-900">
-                          🏷️ MARKDOWN TRIGGER
-                        </Badge>
-                      )}
-                      {product.prediction.suggested_markdown_percent > 0 && (
-                        <Badge className="bg-yellow-500 text-gray-900 font-bold border-2 border-gray-900">
-                          📉 {product.prediction.suggested_markdown_percent}% MARKDOWN
-                        </Badge>
-                      )}
-                    </div>
+                    {/* Next Button */}
+                    <Button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="bg-gray-600 hover:bg-gray-700 text-white font-black text-lg py-3 px-6 border-4 border-gray-900 shadow-[4px_4px_0px_0px_#1f2937] hover:shadow-[6px_6px_0px_0px_#1f2937] transition-all transform hover:-translate-x-1 hover:-translate-y-1 disabled:opacity-50 disabled:transform-none disabled:shadow-[4px_4px_0px_0px_#1f2937]"
+                    >
+                      NEXT →
+                    </Button>
+                  </div>
 
-                    {/* Key Features */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                      <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                        <span className="font-bold text-gray-900">Turnover:</span>{" "}
-                        {product.features.Average_Turnover_Time.toFixed(1)} days
-                      </div>
-                      <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                        <span className="font-bold text-gray-900">Last Sale:</span>{" "}
-                        {product.features.Days_Since_Last_Sale} days ago
-                      </div>
-                      <div className="bg-gray-100 border-2 border-gray-900 p-2">
-                        <span className="font-bold text-gray-900">Overstock Risk:</span>{" "}
-                        {(product.features.Overstock_Risk * 100).toFixed(1)}%
-                      </div>
+                  {/* Pagination Summary */}
+                  <div className="mt-4 text-center">
+                    <div className="bg-gray-100 border-3 border-gray-900 p-3 shadow-[3px_3px_0px_0px_#1f2937] inline-block">
+                      <p className="text-sm font-bold text-gray-900">
+                        📄 PAGE {currentPage} OF {totalPages} • {results.length} TOTAL RESULTS
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
